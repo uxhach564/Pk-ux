@@ -2791,6 +2791,30 @@ local WpnDb = {
   [2230004] = {"Lv. 4 Lucky Egg","LuckyEgg"}
 }
 
+-- Weapon category and per-item switches. Numeric IDs are internal only; UI labels use names.
+local WpnCategoryOrder = {"AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "LuckyEgg"}
+local function WpnCategoryConfigKey(category)
+  return "WeaponCategory_" .. category
+end
+local function WpnItemConfigKey(weaponId)
+  return "WeaponItem_" .. tostring(weaponId)
+end
+for _, category in ipairs(WpnCategoryOrder) do
+  local key = WpnCategoryConfigKey(category)
+  if A.Config[key] == nil then A.Config[key] = true end
+end
+for weaponId in pairs(WpnDb) do
+  local key = WpnItemConfigKey(weaponId)
+  if A.Config[key] == nil then A.Config[key] = true end
+end
+
+local function IsWeaponCategoryEnabled(category)
+  return A.Config[WpnCategoryConfigKey(category)] ~= false
+end
+local function IsWeaponItemEnabled(weaponId)
+  return A.Config[WpnItemConfigKey(weaponId)] ~= false
+end
+
 function Weapons.Scan(pc)
   if not Around(pc) then return end
   pcall(function()
@@ -2845,7 +2869,7 @@ function Weapons.Draw(pc)
     local item = entry.actor
     if Around(item) then
       local info = WpnDb[entry.id]
-      if info then
+      if info and IsWeaponCategoryEnabled(info[2]) and IsWeaponItemEnabled(entry.id) then
         pcall(function()
           local distM = 0
           if type(player.GetDistanceTo) == "function" then distM = math.floor(player:GetDistanceTo(item) / 100) end
@@ -3525,8 +3549,7 @@ function Menu.Wire()
   if loc and not loc._AegisLocHooked then
     local FakeText = {
       [999000] = "UX_Official MENU",
-      [999001] = "Visuals (ESP)",
-      [999002] = "Weapon Customize"
+      [999001] = "Visuals (ESP)"
     }
     for _, fn in ipairs({"GetLocalizeResStr", "GetText", "GetTextByID", "GetLocalText", "GetLocalizeStr"}) do
       if loc[fn] then
@@ -3573,12 +3596,47 @@ function Menu.Wire()
         MinValue = 1, MaxValue = 100, min = 1, max = 100,
         GetFunc = function() return (A.Config.IpadFov or 120) - 90 end,
         SetFunc = function(c, v) A.Config.IpadFov = 90 + v return true end },
-   { Key = "ModMenu_Weapons", UI = alias.Switcher, Text = "Weapons",
-        GetFunc = function() return A.Config.Weapons end,
-        SetFunc = function(c, v) A.Config.Weapons = v return true end }
     }
 
     local AliasMap = alias
+
+    -- Separate expandable Weapon Setting section. UI text deliberately excludes numeric IDs.
+    local weaponSettingKey = "ModMenu_WeaponSettings"
+    table.insert(stack, {
+      Key = weaponSettingKey, UI = AliasMap.TitleSwitcher, Text = "Weapon Setting", ExpandIndex = 0,
+      GetFunc = function() return A.Config.Weapons end,
+      SetFunc = function(c, v) A.Config.Weapons = v return true end
+    })
+    for _, category in ipairs(WpnCategoryOrder) do
+      local categoryName = category
+      local categoryKey = "ModMenu_WeaponCategory_" .. categoryName
+      table.insert(stack, {
+        Key = categoryKey, UI = AliasMap.TitleSwitcher, Text = "   " .. categoryName,
+        ExpandHandle = weaponSettingKey, ExpandIndex = 0,
+        GetFunc = function() return IsWeaponCategoryEnabled(categoryName) end,
+        SetFunc = function(c, v) A.Config[WpnCategoryConfigKey(categoryName)] = v == true; return true end
+      })
+      local itemIds = {}
+      for weaponId, info in pairs(WpnDb) do
+        if info[2] == categoryName then itemIds[#itemIds + 1] = weaponId end
+      end
+      table.sort(itemIds, function(a, b)
+        local nameA, nameB = WpnDb[a][1], WpnDb[b][1]
+        if nameA == nameB then return a < b end
+        return nameA < nameB
+      end)
+      for _, weaponId in ipairs(itemIds) do
+        local id = weaponId
+        local weaponName = WpnDb[id][1]
+        table.insert(stack, {
+          Key = "ModMenu_WeaponItem_" .. tostring(id), UI = AliasMap.Switcher,
+          Text = "      " .. weaponName, ExpandHandle = categoryKey,
+          GetFunc = function() return IsWeaponItemEnabled(id) end,
+          SetFunc = function(c, v) A.Config[WpnItemConfigKey(id)] = v == true; return true end
+        })
+      end
+    end
+
     local T = function(_, english) return english end
         local StackAimbotV2 = {
             { Key = "ModMenu_AT_Ex", UI = AliasMap.TitleSwitcher, Text = T("▶ Bật Aimbot Roy & Custom", "▶ Enable Custom Aimbot V2"), ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchEnable end, SetFunc = function(c,v) _G.LexusConfig.AimTouchEnable = v return true end },
@@ -3643,89 +3701,9 @@ function Menu.Wire()
     for _, item in ipairs(StackAimbotV2) do
       table.insert(stack, item)
     end
-
-    -- Weapon Customize: category expanders and per-category single-selection toggles.
-    -- This section stores UI state only; no weapon-application API exists in this source.
-    A.Config.WeaponCustomizeCategories = A.Config.WeaponCustomizeCategories or {}
-    A.Config.WeaponCustomizeItems = A.Config.WeaponCustomizeItems or {}
-
-    local weaponCategories = {
-      "AR", "SMG", "Sniper", "Shotgun", "LMG",
-      "Pistol", "Melee", "Special", "Scope", "LuckyEgg"
-    }
-    local weaponCustomizeStack = {}
-
-    for _, categoryName in ipairs(weaponCategories) do
-      local categoryNameLocal = categoryName
-      local categoryKey = "WeaponCustomize_Category_" .. categoryNameLocal
-      A.Config.WeaponCustomizeCategories[categoryNameLocal] =
-        A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
-
-      table.insert(weaponCustomizeStack, {
-        Key = categoryKey,
-        UI = alias.TitleSwitcher,
-        Text = categoryNameLocal,
-        ExpandIndex = 0,
-        GetFunc = function()
-          return A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
-        end,
-        SetFunc = function(c, v)
-          A.Config.WeaponCustomizeCategories[categoryNameLocal] = (v == true)
-          return true
-        end
-      })
-
-      local categoryWeapons = {}
-      for weaponId, weaponInfo in pairs(WpnDb) do
-        if weaponInfo[2] == categoryNameLocal then
-          categoryWeapons[#categoryWeapons + 1] = {
-            Id = tonumber(weaponId),
-            Name = weaponInfo[1]
-          }
-        end
-      end
-      table.sort(categoryWeapons, function(a, b)
-        if a.Name == b.Name then return a.Id < b.Id end
-        return a.Name < b.Name
-      end)
-
-      for _, weapon in ipairs(categoryWeapons) do
-        local weaponId = weapon.Id
-        local weaponCategory = categoryNameLocal
-        A.Config.WeaponCustomizeItems[weaponId] =
-          A.Config.WeaponCustomizeItems[weaponId] == true
-
-        table.insert(weaponCustomizeStack, {
-          Key = "WeaponCustomize_Item_" .. tostring(weaponId),
-          UI = alias.Switcher,
-          Text = "   " .. weapon.Name,
-          ExpandHandle = categoryKey,
-          GetFunc = function()
-            return A.Config.WeaponCustomizeItems[weaponId] == true
-          end,
-          SetFunc = function(c, v)
-            local enabled = (v == true)
-            -- One selected weapon per category: enabling one clears its siblings.
-            if enabled then
-              for otherId, otherInfo in pairs(WpnDb) do
-                if otherInfo[2] == weaponCategory then
-                  A.Config.WeaponCustomizeItems[tonumber(otherId)] = false
-                end
-              end
-            end
-            A.Config.WeaponCustomizeItems[weaponId] = enabled
-            return true
-          end
-        })
-      end
-    end
-
     pageDef.ModMenu = {
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
-      Category = {
-        { Key = "Cat_ESP", Text = 999001, Stack = stack },
-        { Key = "Cat_WeaponCustomize", Text = 999002, Stack = weaponCustomizeStack }
-      }
+      Category = { { Key = "Cat_ESP", Text = 999001, Stack = stack } }
     }
     for i = #catalog, 1, -1 do
       if type(catalog[i]) == "table" and catalog[i].Key == "ModMenu" then table.remove(catalog, i) end
