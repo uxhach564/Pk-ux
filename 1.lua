@@ -2819,7 +2819,7 @@ function Weapons.Scan(pc)
         pcall(function()
           if type(player.GetDistanceTo) == "function" then dist = player:GetDistanceTo(item) end
         end)
-        if dist <= 7000 then
+        if dist <= 30000 then
           local itemId = nil
           pcall(function()
             if item.DefineID then itemId = item.DefineID.TypeSpecificID or item.DefineID end
