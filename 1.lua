@@ -3645,8 +3645,9 @@ function Menu.Wire()
     end
 
     -- Weapon Customize: master switch, category switches, and named weapon switches.
-    -- The switches store explicit configuration flags; the game-specific skin setter
-    -- is not present in this source file.
+    -- Category switches expand/collapse their own weapon lists. Individual weapon
+    -- labels show names only; numeric IDs remain internal configuration keys.
+    -- The game-specific skin setter is not present in this source file.
     A.Config.WeaponCustomizeEnabled = A.Config.WeaponCustomizeEnabled == true
     A.Config.WeaponCustomizeSkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0
     A.Config.WeaponCustomizeLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
@@ -3734,7 +3735,7 @@ function Menu.Wire()
         table.insert(weaponCustomizeStack, {
           Key = "WeaponCustomize_Item_" .. tostring(weaponId),
           UI = alias.Switcher,
-          Text = "   " .. weapon.Name .. " [" .. tostring(weaponId) .. "]",
+          Text = "   " .. weapon.Name,
           ExpandHandle = categoryKey,
           GetFunc = function()
             return A.Config.WeaponCustomizeItems[weaponId] == true
