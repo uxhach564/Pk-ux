@@ -3644,39 +3644,8 @@ function Menu.Wire()
       table.insert(stack, item)
     end
 
-    -- Weapon Customize: master switch, category switches, and named weapon switches.
-    -- This layer owns UI/config state. Applying a skin to the live weapon requires
-    -- the game's weapon-skin API, which is not defined in this source file.
-    local function WeaponCustomizeToBool(value)
-      if value == true or value == 1 then return true end
-      if type(value) == "string" then
-        local normalized = string.lower(value)
-        return normalized == "true" or normalized == "1" or normalized == "on"
-      end
-      return false
-    end
-
-    local function WeaponCustomizeIsActive(weaponId, categoryName)
-      return A.Config.WeaponCustomizeEnabled == true
-        and A.Config.WeaponCustomizeCategories[categoryName] == true
-        and A.Config.WeaponCustomizeItems[tonumber(weaponId)] == true
-    end
-
-    -- Public state bridge for the game's skin handler, if one is supplied by the
-    -- runtime or another project module. No undocumented engine method is guessed.
-    _G.UXOfficial_GetWeaponCustomizeState = function(weaponId, categoryName)
-      return {
-        Enabled = A.Config.WeaponCustomizeEnabled == true,
-        CategoryEnabled = A.Config.WeaponCustomizeCategories[categoryName] == true,
-        WeaponEnabled = A.Config.WeaponCustomizeItems[tonumber(weaponId)] == true,
-        Active = WeaponCustomizeIsActive(weaponId, categoryName),
-        SkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0,
-        SkinLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
-      }
-    end
-    A.Config.WeaponCustomizeEnabled = A.Config.WeaponCustomizeEnabled == true
-    A.Config.WeaponCustomizeSkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0
-    A.Config.WeaponCustomizeLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
+    -- Weapon Customize: category expanders and per-category single-selection toggles.
+    -- This section stores UI state only; no weapon-application API exists in this source.
     A.Config.WeaponCustomizeCategories = A.Config.WeaponCustomizeCategories or {}
     A.Config.WeaponCustomizeItems = A.Config.WeaponCustomizeItems or {}
 
@@ -3684,40 +3653,7 @@ function Menu.Wire()
       "AR", "SMG", "Sniper", "Shotgun", "LMG",
       "Pistol", "Melee", "Special", "Scope", "LuckyEgg"
     }
-    local weaponCustomizeStack = {
-      {
-        Key = "WeaponCustomize_Enable",
-        UI = alias.Switcher,
-        Text = "Enable Weapon Customize",
-        GetFunc = function() return A.Config.WeaponCustomizeEnabled == true end,
-        SetFunc = function(c, v)
-          A.Config.WeaponCustomizeEnabled = WeaponCustomizeToBool(v)
-          return true
-        end
-      },
-      {
-        Key = "WeaponCustomize_SkinId",
-        UI = alias.Slider,
-        Text = "Skin ID (0-999999)",
-        MinValue = 0, MaxValue = 999999, min = 0, max = 999999,
-        GetFunc = function() return A.Config.WeaponCustomizeSkinId or 0 end,
-        SetFunc = function(c, v)
-          A.Config.WeaponCustomizeSkinId = math.max(0, math.min(999999, math.floor((tonumber(v) or 0) + 0.5)))
-          return true
-        end
-      },
-      {
-        Key = "WeaponCustomize_Level",
-        UI = alias.Slider,
-        Text = "Skin Level (1-7)",
-        MinValue = 1, MaxValue = 7, min = 1, max = 7,
-        GetFunc = function() return A.Config.WeaponCustomizeLevel or 1 end,
-        SetFunc = function(c, v)
-          A.Config.WeaponCustomizeLevel = math.max(1, math.min(7, math.floor((tonumber(v) or 1) + 0.5)))
-          return true
-        end
-      }
-    }
+    local weaponCustomizeStack = {}
 
     for _, categoryName in ipairs(weaponCategories) do
       local categoryNameLocal = categoryName
@@ -3734,7 +3670,7 @@ function Menu.Wire()
           return A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
         end,
         SetFunc = function(c, v)
-          A.Config.WeaponCustomizeCategories[categoryNameLocal] = WeaponCustomizeToBool(v)
+          A.Config.WeaponCustomizeCategories[categoryNameLocal] = (v == true)
           return true
         end
       })
@@ -3755,6 +3691,7 @@ function Menu.Wire()
 
       for _, weapon in ipairs(categoryWeapons) do
         local weaponId = weapon.Id
+        local weaponCategory = categoryNameLocal
         A.Config.WeaponCustomizeItems[weaponId] =
           A.Config.WeaponCustomizeItems[weaponId] == true
 
@@ -3767,7 +3704,16 @@ function Menu.Wire()
             return A.Config.WeaponCustomizeItems[weaponId] == true
           end,
           SetFunc = function(c, v)
-            A.Config.WeaponCustomizeItems[weaponId] = WeaponCustomizeToBool(v)
+            local enabled = (v == true)
+            -- One selected weapon per category: enabling one clears its siblings.
+            if enabled then
+              for otherId, otherInfo in pairs(WpnDb) do
+                if otherInfo[2] == weaponCategory then
+                  A.Config.WeaponCustomizeItems[tonumber(otherId)] = false
+                end
+              end
+            end
+            A.Config.WeaponCustomizeItems[weaponId] = enabled
             return true
           end
         })
