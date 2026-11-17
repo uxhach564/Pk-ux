@@ -3808,14 +3808,14 @@ function Menu.Wire()
             { Key = "ModMenu_AT_Mortar_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-360)", "      FOV Radius (1-360)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 1, MaxValue = 360, min = 1, max = 360, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarFOV or 360 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarFOV = v return true end },
             { Key = "ModMenu_AT_Mortar_Pred", UI = AliasMap.Slider, Text = T("      Dự Đoán Hướng Chạy (0-100)", "      Prediction Value (0-100)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 0, MaxValue = 100, min = 0, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarPred or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarPred = v return true end }
         }
-    for _, item in ipairs(StackAimbotV2) do
-      table.insert(stack, item)
-    end
+    -- Keep the V2 Aimboard controls in their own tab immediately to the right
+    -- of Weapon Setting, instead of mixing them into the Visuals (ESP) list.
     pageDef.ModMenu = {
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
       Category = {
         { Key = "Cat_ESP", Text = 999001, Stack = stack },
-        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack }
+        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack },
+        { Key = "Cat_V2_Aimboard", Text = "V2 aimboard", Stack = StackAimbotV2 }
       }
     }
     for i = #catalog, 1, -1 do
