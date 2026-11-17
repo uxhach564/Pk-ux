@@ -2882,6 +2882,83 @@ function Weapons.Draw(pc)
   end
 end
 
+-- AirDrop and Loot Crate display, following the weapon ESP scan/draw pattern.
+local SupplyItems = {}
+A.Config.AirDropESP = A.Config.AirDropESP ~= false
+A.Config.LootCrateESP = A.Config.LootCrateESP ~= false
+A.Config.AirDropDistance = A.Config.AirDropDistance or 300
+A.Config.LootCrateDistance = A.Config.LootCrateDistance or 300
+
+function SupplyItems.Scan(pc)
+  if not Around(pc) then return end
+  pcall(function()
+    local now = os.clock()
+    if A.Up.SupplyScanAt and (now - A.Up.SupplyScanAt) < 1.0 then return end
+    A.Up.SupplyScanAt = now
+    A.Up.SupplyItems = {}
+    local player = pc:GetPlayerCharacterSafety()
+    if not Around(player) then return end
+    local boxClass = import("PlayerTombBox")
+    if not boxClass then return end
+    local list = Game:GetActorsByClass(boxClass)
+    if not list then return end
+    local count = type(list.Num) == "function" and list:Num() or #list
+    for i = 0, count - 1 do
+      local box = type(list.Get) == "function" and list:Get(i) or list[i]
+      if Around(box) then
+        local boxType = 0
+        pcall(function() boxType = box.BoxType or 0 end)
+        local isAirDrop = (boxType == 1)
+        local maxDistance = isAirDrop and (A.Config.AirDropDistance or 300) or (A.Config.LootCrateDistance or 300)
+        local distance = 0
+        pcall(function()
+          if type(player.GetDistanceTo) == "function" then distance = player:GetDistanceTo(box) / 100 end
+        end)
+        if distance <= maxDistance then
+          A.Up.SupplyItems[#A.Up.SupplyItems + 1] = {
+            actor = box,
+            kind = isAirDrop and "airdrop" or "lootcrate"
+          }
+        end
+      end
+    end
+  end)
+end
+
+function SupplyItems.Draw(pc)
+  if not Around(pc) or not A.Up.SupplyItems then return end
+  local hud = nil
+  pcall(function() hud = pc.MyHUD end)
+  if not Around(hud) or type(hud.AddDebugText) ~= "function" then return end
+  local player = pc:GetPlayerCharacterSafety()
+  if not Around(player) then return end
+  for _, entry in ipairs(A.Up.SupplyItems) do
+    local actor = entry.actor
+    local enabled = false
+    if entry.kind == "airdrop" then
+      enabled = (A.Config.AirDropESP == true)
+    else
+      enabled = (A.Config.LootCrateESP == true)
+    end
+    if enabled and Around(actor) then
+      pcall(function()
+        local distance = 0
+        if type(player.GetDistanceTo) == "function" then distance = math.floor(player:GetDistanceTo(actor) / 100) end
+        local label, color
+        if entry.kind == "airdrop" then
+          label = "Airdrop"
+          color = {R=255, G=0, B=0, A=255}
+        else
+          label = "Loot Crate"
+          color = {R=255, G=210, B=0, A=255}
+        end
+        hud:AddDebugText(label .. " [" .. tostring(distance) .. "m]", actor, 0.06,
+          {X=0, Y=0, Z=60}, {X=0, Y=0, Z=60}, color, true, false, true, nil, 0.8, true)
+      end)
+    end
+  end
+end
+
 local Gfx = {}
 
 function Gfx.PushFps(target)
@@ -3648,6 +3725,34 @@ function Menu.Wire()
       end
     end
 
+    -- Supply-item controls use the same expandable TitleSwitcher + child setting pattern as weapons.
+    local supplyStack = {
+      {
+        Key = "ModMenu_AirDrop_Ex", UI = AliasMap.TitleSwitcher, Text = "AirDrop",
+        ExpandIndex = 0,
+        GetFunc = function() return A.Config.AirDropESP == true end,
+        SetFunc = function(c, v) A.Config.AirDropESP = (v == true); return true end
+      },
+      {
+        Key = "ModMenu_AirDrop_Distance", UI = AliasMap.Slider, Text = "   AirDrop Distance (1-1000m)",
+        ExpandHandle = "ModMenu_AirDrop_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
+        GetFunc = function() return A.Config.AirDropDistance or 300 end,
+        SetFunc = function(c, v) A.Config.AirDropDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
+      },
+      {
+        Key = "ModMenu_LootCrate_Ex", UI = AliasMap.TitleSwitcher, Text = "Loot Crate",
+        ExpandIndex = 0,
+        GetFunc = function() return A.Config.LootCrateESP == true end,
+        SetFunc = function(c, v) A.Config.LootCrateESP = (v == true); return true end
+      },
+      {
+        Key = "ModMenu_LootCrate_Distance", UI = AliasMap.Slider, Text = "   Loot Crate Distance (1-1000m)",
+        ExpandHandle = "ModMenu_LootCrate_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
+        GetFunc = function() return A.Config.LootCrateDistance or 300 end,
+        SetFunc = function(c, v) A.Config.LootCrateDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
+      }
+    }
+
     local T = function(_, english) return english end
         local StackAimbotV2 = {
             { Key = "ModMenu_AT_Ex", UI = AliasMap.TitleSwitcher, Text = T("▶ Bật Aimbot Roy & Custom", "▶ Enable Custom Aimbot V2"), ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchEnable end, SetFunc = function(c,v) _G.LexusConfig.AimTouchEnable = v return true end },
@@ -3716,7 +3821,8 @@ function Menu.Wire()
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
       Category = {
         { Key = "Cat_ESP", Text = 999001, Stack = stack },
-        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack }
+        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack },
+        { Key = "Cat_SupplyItems", Text = "AirDrop / Loot Crate", Stack = supplyStack }
       }
     }
     for i = #catalog, 1, -1 do
@@ -3853,6 +3959,13 @@ local function Beat()
     Weapons.Draw(pc)
   else
     A.Up.NearbyWeapons = {}
+  end
+
+  if A.Config.AirDropESP or A.Config.LootCrateESP then
+    SupplyItems.Scan(pc)
+    SupplyItems.Draw(pc)
+  else
+    A.Up.SupplyItems = {}
   end
 
   pcall(function()
