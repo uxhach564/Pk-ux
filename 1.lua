@@ -2131,25 +2131,8 @@ A.Config = A.Config or {
   AimTouchSniperIgKnock = false,
   AimTouchSniperIgBot = false,
   AimTouchSniperVisCheck = false,
-  AimTouchMortar = false,
-  WeaponCustomizeEnabled = false,
-  WeaponCustomizeCategoryIndex = 1,
-  WeaponCustomizeIndex = 1,
-  WeaponCustomizeSkinId = 0,
-  WeaponCustomizeLevel = 1
+  AimTouchMortar = false
 }
-
--- Keep weapon-customization settings when the config table survives a reload.
-local _weaponCustomizeDefaults = {
-  WeaponCustomizeEnabled = false,
-  WeaponCustomizeCategoryIndex = 1,
-  WeaponCustomizeIndex = 1,
-  WeaponCustomizeSkinId = 0,
-  WeaponCustomizeLevel = 1
-}
-for _k, _v in pairs(_weaponCustomizeDefaults) do
-  if A.Config[_k] == nil then A.Config[_k] = _v end
-end
 
 -- Fill missing Aimbot V2 flags when the config table survives a hot reload.
 local _aimConfigDefaults = {
@@ -3660,80 +3643,115 @@ function Menu.Wire()
     for _, item in ipairs(StackAimbotV2) do
       table.insert(stack, item)
     end
-    -- Weapon catalog supplied for the Weapon Customize tab.
-    local WeaponCategories = { "AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "LuckyEgg" }
-    local WeaponColors = {
-      AR={R=255,G=255,B=0,A=255}, SMG={R=0,G=255,B=255,A=255},
-      Sniper={R=255,G=128,B=0,A=255}, Shotgun={R=0,G=255,B=0,A=255},
-      LMG={R=255,G=255,B=255,A=255}, Pistol={R=200,G=200,B=200,A=255},
-      Melee={R=150,G=150,B=150,A=255}, Special={R=255,G=0,B=255,A=255},
-      Scope={R=0,G=0,B=255,A=255}, LuckyEgg={R=255,G=0,B=0,A=255}
-    }
-    local WeaponDatabase = {
-      [101001]={"AKM","AR"}, [101002]={"M16A4","AR"}, [101003]={"SCAR-L","AR"},
-      [101004]={"M416","AR"}, [101005]={"Groza","AR"}, [101006]={"AUG","AR"},
-      [101007]={"QBZ","AR"}, [101008]={"M762","AR"}, [101009]={"Mk47 Mutant","AR"},
-      [101010]={"G36C","AR"}, [101011]={"AC-VAL","AR"}, [101012]={"Honey Badger","AR"},
-      [101100]={"FAMAS","AR"}, [101101]={"ASM Abakan AR","AR"}, [101102]={"ACE32","AR"},
-      [102001]={"UZI","SMG"}, [102002]={"UMP45","SMG"}, [102003]={"Vector","SMG"},
-      [102004]={"Thompson SMG","SMG"}, [102005]={"PP-19 Bizon","SMG"}, [102007]={"MP5K","SMG"},
-      [102008]={"JS9","SMG"}, [102105]={"P90","SMG"},
-      [103001]={"Kar98K","Sniper"}, [103002]={"M24","Sniper"}, [103003]={"AWM","Sniper"},
-      [103004]={"SKS","Sniper"}, [103005]={"VSS","Sniper"}, [103006]={"Mini14","Sniper"},
-      [103007]={"Mk14","Sniper"}, [103008]={"Win94","Sniper"}, [103009]={"SLR","Sniper"},
-      [103010]={"QBU","Sniper"}, [103011]={"Mosin Nagant","Sniper"}, [103012]={"AMR","Sniper"},
-      [103100]={"Mk12","Sniper"}, [103101]={"TR-2A Air Gun","Sniper"}, [103102]={"DSR","Sniper"},
-      [103103]={"Sniper Rifle","Sniper"}, [103104]={"Sniper Rifle","Sniper"}, [103105]={"SR","Sniper"},
-      [104001]={"S686","Shotgun"}, [104002]={"S1897","Shotgun"}, [104003]={"S12K","Shotgun"},
-      [104004]={"DBS","Shotgun"}, [104100]={"SPAS-12","Shotgun"}, [104101]={"M1014","Shotgun"},
-      [104102]={"NS2000","Shotgun"}, [105001]={"M249","LMG"}, [105002]={"DP-28","LMG"},
-      [105003]={"M134","LMG"}, [105010]={"MG3","LMG"},
-      [106001]={"P92","Pistol"}, [106002]={"P1911","Pistol"}, [106003]={"R1895","Pistol"},
-      [106004]={"P18C","Pistol"}, [106005]={"R45","Pistol"}, [106006]={"Sawed-off","Pistol"},
-      [106008]={"Skorpion","Pistol"}, [106010]={"Desert Eagle","Pistol"},
-      [106007]={"Flare Gun","Pistol"}, [106009]={"Flare Gun","Pistol"},
-      [107001]={"Crossbow","Special"}, [107002]={"RPG-7","Special"}, [107003]={"Riot Shield","Special"},
-      [108001]={"Machete","Melee"}, [108002]={"Crowbar","Melee"}, [108003]={"Sickle","Melee"},
-      [108004]={"Pan","Melee"}, [108005]={"Dagger","Melee"},
-      [203001]={"Red Dot Sight","Scope"}, [203002]={"Holographic Sight","Scope"},
-      [203003]={"2x Scope","Scope"}, [203004]={"4x Scope","Scope"}, [203005]={"8x Scope","Scope"},
-      [203014]={"3x Scope","Scope"}, [203015]={"6x Scope","Scope"},
-      [2230001]={"Lv. 1 Lucky Egg","LuckyEgg"}, [2230002]={"Lv. 2 Lucky Egg","LuckyEgg"},
-      [2230003]={"Lv. 3 Lucky Egg","LuckyEgg"}, [2230004]={"Lv. 4 Lucky Egg","LuckyEgg"}
-    }
-    local WeaponRows = {}
-    for id, info in pairs(WeaponDatabase) do
-      WeaponRows[#WeaponRows + 1] = { Id = id, Name = info[1], Category = info[2] }
-    end
-    table.sort(WeaponRows, function(a, b) return a.Id < b.Id end)
 
-    local weaponStack = {
-      { Key = "WeaponCustomize_Enable", UI = alias.Switcher, Text = "Enable Weapon Customize",
-        GetFunc = function() return A.Config.WeaponCustomizeEnabled end,
-        SetFunc = function(c, v) A.Config.WeaponCustomizeEnabled = v return true end },
-      { Key = "WeaponCustomize_Category", UI = alias.Slider, Text = "Weapon Category (1-10)",
-        MinValue = 1, MaxValue = #WeaponCategories, min = 1, max = #WeaponCategories,
-        GetFunc = function() return A.Config.WeaponCustomizeCategoryIndex or 1 end,
-        SetFunc = function(c, v) A.Config.WeaponCustomizeCategoryIndex = math.max(1, math.min(#WeaponCategories, math.floor(v + 0.5))); return true end },
-      { Key = "WeaponCustomize_Weapon", UI = alias.Slider, Text = "Weapon Entry (1-" .. tostring(#WeaponRows) .. ")",
-        MinValue = 1, MaxValue = #WeaponRows, min = 1, max = #WeaponRows,
-        GetFunc = function() return A.Config.WeaponCustomizeIndex or 1 end,
-        SetFunc = function(c, v) A.Config.WeaponCustomizeIndex = math.max(1, math.min(#WeaponRows, math.floor(v + 0.5))); return true end },
-      { Key = "WeaponCustomize_SkinId", UI = alias.Slider, Text = "Skin ID (0-999999)",
+    -- Weapon Customize: master switch, category switches, and named weapon switches.
+    -- The switches store explicit configuration flags; the game-specific skin setter
+    -- is not present in this source file.
+    A.Config.WeaponCustomizeEnabled = A.Config.WeaponCustomizeEnabled == true
+    A.Config.WeaponCustomizeSkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0
+    A.Config.WeaponCustomizeLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
+    A.Config.WeaponCustomizeCategories = A.Config.WeaponCustomizeCategories or {}
+    A.Config.WeaponCustomizeItems = A.Config.WeaponCustomizeItems or {}
+
+    local weaponCategories = {
+      "AR", "SMG", "Sniper", "Shotgun", "LMG",
+      "Pistol", "Melee", "Special", "Scope", "LuckyEgg"
+    }
+    local weaponCustomizeStack = {
+      {
+        Key = "WeaponCustomize_Enable",
+        UI = alias.Switcher,
+        Text = "Enable Weapon Customize",
+        GetFunc = function() return A.Config.WeaponCustomizeEnabled == true end,
+        SetFunc = function(c, v)
+          A.Config.WeaponCustomizeEnabled = v == true
+          return true
+        end
+      },
+      {
+        Key = "WeaponCustomize_SkinId",
+        UI = alias.Slider,
+        Text = "Skin ID (0-999999)",
         MinValue = 0, MaxValue = 999999, min = 0, max = 999999,
         GetFunc = function() return A.Config.WeaponCustomizeSkinId or 0 end,
-        SetFunc = function(c, v) A.Config.WeaponCustomizeSkinId = math.max(0, math.min(999999, math.floor(v + 0.5))); return true end },
-      { Key = "WeaponCustomize_Level", UI = alias.Slider, Text = "Skin Level (1-7)",
+        SetFunc = function(c, v)
+          A.Config.WeaponCustomizeSkinId = math.max(0, math.min(999999, math.floor((tonumber(v) or 0) + 0.5)))
+          return true
+        end
+      },
+      {
+        Key = "WeaponCustomize_Level",
+        UI = alias.Slider,
+        Text = "Skin Level (1-7)",
         MinValue = 1, MaxValue = 7, min = 1, max = 7,
         GetFunc = function() return A.Config.WeaponCustomizeLevel or 1 end,
-        SetFunc = function(c, v) A.Config.WeaponCustomizeLevel = math.max(1, math.min(7, math.floor(v + 0.5))); return true end }
+        SetFunc = function(c, v)
+          A.Config.WeaponCustomizeLevel = math.max(1, math.min(7, math.floor((tonumber(v) or 1) + 0.5)))
+          return true
+        end
+      }
     }
+
+    for _, categoryName in ipairs(weaponCategories) do
+      local categoryNameLocal = categoryName
+      local categoryKey = "WeaponCustomize_Category_" .. categoryNameLocal
+      A.Config.WeaponCustomizeCategories[categoryNameLocal] =
+        A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
+
+      table.insert(weaponCustomizeStack, {
+        Key = categoryKey,
+        UI = alias.TitleSwitcher,
+        Text = categoryNameLocal,
+        ExpandIndex = 0,
+        GetFunc = function()
+          return A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
+        end,
+        SetFunc = function(c, v)
+          A.Config.WeaponCustomizeCategories[categoryNameLocal] = v == true
+          return true
+        end
+      })
+
+      local categoryWeapons = {}
+      for weaponId, weaponInfo in pairs(WpnDb) do
+        if weaponInfo[2] == categoryNameLocal then
+          categoryWeapons[#categoryWeapons + 1] = {
+            Id = tonumber(weaponId),
+            Name = weaponInfo[1]
+          }
+        end
+      end
+      table.sort(categoryWeapons, function(a, b)
+        if a.Name == b.Name then return a.Id < b.Id end
+        return a.Name < b.Name
+      end)
+
+      for _, weapon in ipairs(categoryWeapons) do
+        local weaponId = weapon.Id
+        A.Config.WeaponCustomizeItems[weaponId] =
+          A.Config.WeaponCustomizeItems[weaponId] == true
+
+        table.insert(weaponCustomizeStack, {
+          Key = "WeaponCustomize_Item_" .. tostring(weaponId),
+          UI = alias.Switcher,
+          Text = "   " .. weapon.Name .. " [" .. tostring(weaponId) .. "]",
+          ExpandHandle = categoryKey,
+          GetFunc = function()
+            return A.Config.WeaponCustomizeItems[weaponId] == true
+          end,
+          SetFunc = function(c, v)
+            A.Config.WeaponCustomizeItems[weaponId] = v == true
+            return true
+          end
+        })
+      end
+    end
 
     pageDef.ModMenu = {
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
       Category = {
         { Key = "Cat_ESP", Text = 999001, Stack = stack },
-        { Key = "Cat_WeaponCustomize", Text = 999002, Stack = weaponStack }
+        { Key = "Cat_WeaponCustomize", Text = 999002, Stack = weaponCustomizeStack }
       }
     }
     for i = #catalog, 1, -1 do
