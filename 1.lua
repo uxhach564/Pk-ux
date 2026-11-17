@@ -2886,8 +2886,9 @@ end
 local SupplyItems = {}
 A.Config.AirDropESP = A.Config.AirDropESP ~= false
 A.Config.LootCrateESP = A.Config.LootCrateESP ~= false
-A.Config.AirDropDistance = A.Config.AirDropDistance or 1000
-A.Config.LootCrateDistance = A.Config.LootCrateDistance or 1000
+-- Fixed maximum scan range: both supply markers always use 1000 meters.
+A.Config.AirDropDistance = 1000
+A.Config.LootCrateDistance = 1000
 
 function SupplyItems.Scan(pc)
   if not Around(pc) then return end
@@ -2909,7 +2910,7 @@ function SupplyItems.Scan(pc)
         local boxType = 0
         pcall(function() boxType = box.BoxType or 0 end)
         local isAirDrop = (boxType == 1)
-        local maxDistance = isAirDrop and (A.Config.AirDropDistance or 300) or (A.Config.LootCrateDistance or 300)
+        local maxDistance = 1000 -- fixed maximum range for AirDrop and Loot Crate
         local distance = 0
         pcall(function()
           if type(player.GetDistanceTo) == "function" then distance = player:GetDistanceTo(box) / 100 end
@@ -3735,23 +3736,11 @@ function Menu.Wire()
         SetFunc = function(c, v) A.Config.AirDropESP = (v == true); return true end
       },
       {
-        Key = "ModMenu_AirDrop_Distance", UI = AliasMap.Slider, Text = "   AirDrop Distance (1-1000m)",
-        ExpandHandle = "ModMenu_AirDrop_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
-        GetFunc = function() return A.Config.AirDropDistance or 1000 end,
-        SetFunc = function(c, v) A.Config.AirDropDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
-      },
-      {
         Key = "ModMenu_LootCrate_Ex", UI = AliasMap.TitleSwitcher, Text = "Loot Crate",
         ExpandIndex = 0,
         GetFunc = function() return A.Config.LootCrateESP == true end,
         SetFunc = function(c, v) A.Config.LootCrateESP = (v == true); return true end
       },
-      {
-        Key = "ModMenu_LootCrate_Distance", UI = AliasMap.Slider, Text = "   Loot Crate Distance (1-1000m)",
-        ExpandHandle = "ModMenu_LootCrate_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
-        GetFunc = function() return A.Config.LootCrateDistance or 1000 end,
-        SetFunc = function(c, v) A.Config.LootCrateDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
-      }
     }
 
     for _, setting in ipairs(supplyStack) do
