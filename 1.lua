@@ -2112,15 +2112,301 @@ A.Config = A.Config or {
   Ipad = false,
   IpadFov = 120,
   HighFps = false,
-  Weapons = false
+  Weapons = false,
+  AimTouchEnable = false,
+  AimTouchHipIgKnock = false,
+  AimTouchHipIgBot = false,
+  AimTouchSGIgKnock = false,
+  AimTouchSGIgBot = false,
+  AimTouchHipVisCheck = false,
+  AimTouchSGVisCheck = false,
+  AimTouchHipfire = false,
+  AimTouchSG = false,
+  AimTouchSGAutoFire = false,
+  AimTouchScopeAll = false,
+  AimTouchScopeIgKnock = false,
+  AimTouchScopeIgBot = false,
+  AimTouchScopeVisCheck = false,
+  AimTouchScopeSniper = false,
+  AimTouchSniperIgKnock = false,
+  AimTouchSniperIgBot = false,
+  AimTouchSniperVisCheck = false,
+  AimTouchMortar = false,
+  WeaponCustomizeEnabled = false,
+  WeaponCustomizeCategoryIndex = 1,
+  WeaponCustomizeIndex = 1,
+  WeaponCustomizeSkinId = 0,
+  WeaponCustomizeLevel = 1
 }
--- Per-category weapon-location settings (default ON to preserve the previous all-weapons behavior).
-for _, key in ipairs({"AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "LuckyEgg"}) do
-  local configKey = "Wpn" .. key
-  if A.Config[configKey] == nil then A.Config[configKey] = true end
+
+-- Keep weapon-customization settings when the config table survives a reload.
+local _weaponCustomizeDefaults = {
+  WeaponCustomizeEnabled = false,
+  WeaponCustomizeCategoryIndex = 1,
+  WeaponCustomizeIndex = 1,
+  WeaponCustomizeSkinId = 0,
+  WeaponCustomizeLevel = 1
+}
+for _k, _v in pairs(_weaponCustomizeDefaults) do
+  if A.Config[_k] == nil then A.Config[_k] = _v end
 end
-A.Config.WpnScanDistance = A.Config.WpnScanDistance or 500
-A.Config.WpnScanInterval = A.Config.WpnScanInterval or 1
+
+-- Fill missing Aimbot V2 flags when the config table survives a hot reload.
+local _aimConfigDefaults = {
+  AimTouchEnable = false,
+  AimTouchHipIgKnock = false, AimTouchHipIgBot = false,
+  AimTouchSGIgKnock = false, AimTouchSGIgBot = false,
+  AimTouchHipVisCheck = false, AimTouchSGVisCheck = false,
+  AimTouchHipfire = false, AimTouchSG = false, AimTouchSGAutoFire = false,
+  AimTouchScopeAll = false, AimTouchScopeIgKnock = false,
+  AimTouchScopeIgBot = false, AimTouchScopeVisCheck = false,
+  AimTouchScopeSniper = false, AimTouchSniperIgKnock = false,
+  AimTouchSniperIgBot = false, AimTouchSniperVisCheck = false,
+  AimTouchMortar = false
+}
+for _k, _v in pairs(_aimConfigDefaults) do
+  if A.Config[_k] == nil then A.Config[_k] = _v end
+end
+
+-- Aimbot V2 compatibility aliases and non-destructive default state.
+_G.LexusConfig = A.Config
+_G.LexusState = _G.LexusState or A.State or {}
+A.State = _G.LexusState
+_G.LexusState.CustomTextData = _G.LexusState.CustomTextData or {}
+local _aimDefaults = {
+  AimTouchHipPrio = 1, AimTouchHipBone = 1, AimTouchHipCond = 1,
+  AimTouchHipSpeed = 50, AimTouchHipFOV = 30, AimTouchHipDist = 250,
+  AimTouchSGPrio = 1, AimTouchSGBone = 2, AimTouchSGCond = 1,
+  AimTouchSGSpeed = 80, AimTouchSGFOV = 40, AimTouchSGDist = 30,
+  AimTouchScopePrio = 1, AimTouchScopeBone = 2, AimTouchScopeCond = 1,
+  AimTouchScopeSpeed = 40, AimTouchScopeFOV = 20, AimTouchScopeDist = 300,
+  AimTouchScopePred = 0, AimTouchScopeRecoil = 0,
+  AimTouchSniperPrio = 1, AimTouchSniperBone = 1, AimTouchSniperCond = 2,
+  AimTouchSniperSpeed = 30, AimTouchSniperFOV = 20, AimTouchSniperDist = 400,
+  AimTouchSniperPred = 0, AimTouchMortarPred = 0, AimTouchMortarFOV = 360
+}
+for _k, _v in pairs(_aimDefaults) do
+  if _G.LexusState.CustomTextData[_k] == nil then
+    _G.LexusState.CustomTextData[_k] = _v
+  end
+end
+
+
+-- ==========================================
+-- UX OFFICIAL: VIP MENU SETTINGS SAVE / LOAD
+-- ==========================================
+-- LexusConfig is already aliased to A.Config above, so this persists the
+-- existing menu configuration without changing the gameplay feature code.
+
+local function GetConfigPaths(fileName)
+  local paths = {
+    "//storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "//storage/emulated/0/Android/data/com.vng.pubgmobile/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "//storage/emulated/0/Android/data/com.pubg.krmobile/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "//storage/emulated/0/Android/data/com.rekoo.pubgm/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "//storage/emulated/0/Android/data/com.pubg.imobile/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/Documents/ShadowTrackerExtra/Saved/Paks/puffer_temp/" .. fileName,
+    "/com.tencent.ig/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/com.vng.pubgmobile/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/com.pubg.krmobile/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/com.rekoo.pubgm/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "/com.pubg.imobile/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "../../ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "../../../ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    "../../../../ShadowTrackerExtra/Saved/Paks/" .. fileName,
+    fileName
+  }
+
+  pcall(function()
+    if os and os.getenv then
+      local homeDir = os.getenv("HOME")
+      if homeDir and homeDir ~= "" then
+        table.insert(paths, 1, homeDir .. "/Documents/ShadowTrackerExtra/Saved/Paks/" .. fileName)
+        table.insert(paths, 2, homeDir .. "/Documents/ShadowTrackerExtra/Saved/Paks/puffer_temp/" .. fileName)
+      end
+    end
+  end)
+
+  return paths
+end
+
+local ConfigFileName = "UX_Official_settings.txt"
+_G.LastConfigSaveStr = _G.LastConfigSaveStr or ""
+
+-- Convert scalar values to valid Lua literals. This also preserves text values.
+local function SerializeConfigTable(tbl)
+  local out = {}
+  for k, v in pairs(tbl or {}) do
+    local keyType = type(k)
+    local valueType = type(v)
+    if (keyType == "string" or keyType == "number")
+      and (valueType == "string" or valueType == "number" or valueType == "boolean") then
+      local keyText
+      if keyType == "string" then
+        keyText = "[" .. string.format("%q", k) .. "]"
+      else
+        keyText = "[" .. tostring(k) .. "]"
+      end
+
+      local valueText
+      if valueType == "string" then
+        valueText = string.format("%q", v)
+      else
+        valueText = tostring(v)
+      end
+
+      out[#out + 1] = "  " .. keyText .. " = " .. valueText .. ",\n"
+    end
+  end
+  table.sort(out)
+  return table.concat(out)
+end
+
+_G.SaveModSettings = function()
+  local ok, saved = pcall(function()
+    local data = "return {\nLexusConfig = {\n"
+    data = data .. SerializeConfigTable(_G.LexusConfig)
+    data = data .. "},\nCustomTextData = {\n"
+    if _G.LexusState then
+      data = data .. SerializeConfigTable(_G.LexusState.CustomTextData)
+    end
+    data = data .. "}\n}\n"
+
+    if data == _G.LastConfigSaveStr then
+      return true
+    end
+
+    if not io or type(io.open) ~= "function" then
+      return false
+    end
+
+    for _, path in ipairs(GetConfigPaths(ConfigFileName)) do
+      local file = io.open(path, "w")
+      if file then
+        local writeOK = pcall(function()
+          file:write(data)
+          file:flush()
+          file:close()
+        end)
+        if writeOK then
+          _G.LastConfigSaveStr = data
+          return true
+        end
+        pcall(function() file:close() end)
+      end
+    end
+    return false
+  end)
+
+  return ok and saved == true
+end
+
+_G.LoadModSettings = function()
+  local ok, loaded = pcall(function()
+    if not io or type(io.open) ~= "function" then
+      return false
+    end
+
+    local content
+    for _, path in ipairs(GetConfigPaths(ConfigFileName)) do
+      local file = io.open(path, "r")
+      if file then
+        content = file:read("*a")
+        file:close()
+        if content and content ~= "" then
+          break
+        end
+      end
+    end
+
+    if not content or content == "" then
+      return false
+    end
+
+    -- Load only in an empty environment when the Lua runtime supports it.
+    local chunk, loadErr
+    if _VERSION == "Lua 5.1" and loadstring then
+      chunk, loadErr = loadstring(content, "UX_Official_settings")
+      if chunk and setfenv then
+        setfenv(chunk, {})
+      end
+    else
+      chunk, loadErr = load(content, "UX_Official_settings", "t", {})
+    end
+
+    if not chunk then
+      print("[UX Settings] Config parse failed: " .. tostring(loadErr))
+      return false
+    end
+
+    local runOK, savedData = pcall(chunk)
+    if not runOK or type(savedData) ~= "table" then
+      print("[UX Settings] Config data is invalid.")
+      return false
+    end
+
+    if type(savedData.LexusConfig) == "table" then
+      _G.LexusConfig = _G.LexusConfig or {}
+      for k, v in pairs(savedData.LexusConfig) do
+        local vt = type(v)
+        if vt == "string" or vt == "number" or vt == "boolean" then
+          _G.LexusConfig[k] = v
+        end
+      end
+    end
+
+    if type(savedData.CustomTextData) == "table" then
+      _G.LexusState = _G.LexusState or {}
+      _G.LexusState.CustomTextData = _G.LexusState.CustomTextData or {}
+      for k, v in pairs(savedData.CustomTextData) do
+        local vt = type(v)
+        if vt == "string" or vt == "number" or vt == "boolean" then
+          _G.LexusState.CustomTextData[k] = v
+        end
+      end
+    end
+
+    _G.LastConfigSaveStr = ""
+    return true
+  end)
+
+  return ok and loaded == true
+end
+
+local function AutoSaveLoop()
+  pcall(function()
+    if _G.SaveModSettings then
+      _G.SaveModSettings()
+    end
+  end)
+
+  pcall(function()
+    local okTicker, ticker = pcall(require, "common.time_ticker")
+    if okTicker and ticker and ticker.AddTimerOnce then
+      ticker.AddTimerOnce(3.0, AutoSaveLoop)
+    end
+  end)
+end
+
+if not _G.ModConfigLoaded then
+  _G.LoadModSettings()
+  AutoSaveLoop()
+  _G.ModConfigLoaded = true
+end
+
+_G.ReadLiveConfig = function()
+  if _G.SaveModSettings then
+    return _G.SaveModSettings()
+  end
+  return false
+end
+-- ==========================================
+-- END UX OFFICIAL SETTINGS SAVE / LOAD
+-- ==========================================
+
+
 
 local tick = nil
 pcall(function() tick = require("common.time_ticker") end)
@@ -2285,8 +2571,8 @@ local function ArmMeshes(enemy, stamp)
     stamp.Sig = sig
     stamp.Dyed = true
     local L = import("LinearColor") or _G.FLinearColor
-    local vis = L and L(0, 1, 0, 1) or {R=0, G=255, B=0, A=1}
-    local occ = L and L(1, 0, 0, 1) or {R=255, G=0, B=0, A=1}
+    local vis = L and L(0, 100, 0, 1) or {R=0, G=100, B=0, A=1}
+    local occ = L and L(100, 0, 0, 1) or {R=100, G=0, B=0, A=1}
     for _, m in ipairs(meshes) do
       if Around(m) then
         pcall(function()
@@ -2526,7 +2812,7 @@ function Weapons.Scan(pc)
   if not Around(pc) then return end
   pcall(function()
     local now = os.clock()
-    if A.Up.WpnScanAt and (now - A.Up.WpnScanAt) < (A.Config.WpnScanInterval or 1) then return end
+    if A.Up.WpnScanAt and (now - A.Up.WpnScanAt) < 1.0 then return end
     A.Up.WpnScanAt = now
     A.Up.NearbyWeapons = {}
     local player = pc:GetPlayerCharacterSafety()
@@ -2550,14 +2836,13 @@ function Weapons.Scan(pc)
         pcall(function()
           if type(player.GetDistanceTo) == "function" then dist = player:GetDistanceTo(item) end
         end)
-        if dist <= ((A.Config.WpnScanDistance or 500) * 100) then
+        if dist <= 30000 then
           local itemId = nil
           pcall(function()
             if item.DefineID then itemId = item.DefineID.TypeSpecificID or item.DefineID end
           end)
           if not itemId and item.DefineId then itemId = item.DefineId end
-          local itemInfo = WpnDb[itemId]
-          if itemInfo and A.Config["Wpn" .. itemInfo[2]] ~= false then
+          if WpnDb[itemId] then
             A.Up.NearbyWeapons[#A.Up.NearbyWeapons + 1] = { actor = item, id = itemId }
           end
         end
@@ -2737,6 +3022,510 @@ function Gfx.Unlock()
   OnScreen("165 FPS UNLOCKED")
 end
 
+-- ===== Imported Aimbot V2 runtime section =====
+-- ========================================== 
+-- HỆ THỐNG AIMBOT V2 TÍCH HỢP MỚI (UPDATE KISMET SMOOTH)
+-- ========================================== 
+_G.GetEnemyTargetsFromActors = function(radius)
+    local result = {}
+    local player = GameplayData.GetPlayerCharacter()
+
+    if not slua.isValid(player) then
+        return result
+    end
+
+    local allCharacters = {}
+    if GameplayData.GetAllPlayerCharacters then
+        allCharacters = GameplayData.GetAllPlayerCharacters()
+    elseif GameplayData.GameCharacters then
+        for _, char in pairs(GameplayData.GameCharacters) do table.insert(allCharacters, char) end
+    end
+
+    local myTeam = player:GetTeamID()
+
+    for _, actor in pairs(allCharacters) do
+        if slua.isValid(actor) and actor ~= player and actor.GetTeamID and actor:IsAlive() then
+            if actor:GetTeamID() ~= myTeam then
+                local dist = player:GetDistanceTo(actor)
+                if dist <= radius then
+                    table.insert(result, actor)
+                end
+            end
+        end
+    end
+    return result
+end
+
+_G.AimTouch = function()
+    pcall(function()
+        if not _G.LexusConfig.AimTouchEnable then return end
+        
+        local player = GameplayData.GetPlayerCharacter()
+        if not slua.isValid(player) then return end
+        
+        local pc = player:GetPlayerControllerSafety()
+        if not slua.isValid(pc) then return end
+        
+        local isFiring = player.bIsWeaponFiring
+        local isADS = player.bIsGunADS
+        
+        -- CHECK WEAPON & AMMO
+        local weapon = player.WeaponManagerComponent and player.WeaponManagerComponent.CurrentWeaponReplicated
+        if not weapon and type(player.GetCurrentShootWeapon) == "function" then
+            weapon = player:GetCurrentShootWeapon()
+        end
+        
+        local isShotgun = false
+        local isSniper = false
+        local isMortar = false
+        local currentAmmo = 1
+        
+        if slua.isValid(weapon) then
+            local wID = type(weapon.GetWeaponID) == "function" and weapon:GetWeaponID() or 0
+            local wName = type(weapon.GetWeaponName) == "function" and weapon:GetWeaponName() or ""
+            
+            if (wID >= 1030000 and wID < 1040000) or wName:find("S686") or wName:find("S1897") or wName:find("S12") or wName:find("DBS") or wName:find("M1014") then 
+                isShotgun = true 
+            end
+            
+            if wName:find("Kar98") or wName:find("M24") or wName:find("AWM") or wName:find("Mosin") or wName:find("Win94") or wName:find("AMR") or wName:find("SKS") or wName:find("SLR") or wName:find("Mini") or wName:find("Mk14") or wName:find("QBU") or wName:find("Mk12") or wName:find("VSS") then
+                isSniper = true
+            end
+
+            if wName:lower():find("mortar") or wName:lower():find("cối") then
+                isMortar = true
+            end
+            
+            if type(weapon.GetCurrentAmmo) == "function" then
+                currentAmmo = weapon:GetCurrentAmmo()
+            elseif weapon.ShootWeaponComponent and type(weapon.ShootWeaponComponent.GetCurrentAmmo) == "function" then
+                currentAmmo = weapon.ShootWeaponComponent:GetCurrentAmmo()
+            elseif weapon.CurrentAmmo ~= nil then
+                currentAmmo = weapon.CurrentAmmo
+            end
+        end
+
+        -- LOGIC NHẢ CÒ SÚNG NẾU MẤT MỤC TIÊU / ĐỊCH CHẾT HOẶC SHOTGUN HẾT ĐẠN
+        if _G.LexusState.IsAutoFiring then
+            pcall(function()
+                player.bIsWeaponFiring = false
+                if type(player.SetIsWeaponFiring) == "function" then player:SetIsWeaponFiring(false) end
+                if slua.isValid(pc) and type(pc.SetIsWeaponFiring) == "function" then pc:SetIsWeaponFiring(false) end
+                local wepMgr = player.WeaponManagerComponent
+                if slua.isValid(wepMgr) then wepMgr.bIsWeaponFiring = false end
+            end)
+            _G.LexusState.IsAutoFiring = false
+        end
+
+        -- SHOTGUN HẾT ĐẠN NGƯNG AIM ĐỂ GAME NẠP ĐẠN
+        if isShotgun and currentAmmo <= 0 then
+            return
+        end
+
+        local cond = 2
+        local prioMode = 1
+        local boneIdx = 1
+        local speedVal = 50
+        local fovVal = 30
+        local maxDistMeters = 50
+        local useVisCheck = false
+        local igKnock = false
+        local igBot = false
+        
+        -- Logic thêm vào: Dự đoán và Bù giật
+        local predVal = 0 
+        local recoilCompVal = 0 
+
+        -- PHÂN LOẠI CẤU HÌNH THEO TRẠNG THÁI HIỆN TẠI
+        if isMortar and _G.LexusConfig.AimTouchMortar then
+            local isPlaced = false
+            pcall(function()
+                if weapon and weapon.MortarState == 2 then isPlaced = true end
+            end)
+            if not isPlaced then return end
+
+            cond = 2 
+            prioMode = 1  
+            boneIdx = 4 
+            speedVal = 100 
+            fovVal = _G.LexusState.CustomTextData.AimTouchMortarFOV or 360 
+            maxDistMeters = 2000 
+            useVisCheck = false 
+            igKnock = false
+            igBot = false
+            predVal = _G.LexusState.CustomTextData.AimTouchMortarPred or 0 
+            
+        elseif isShotgun and _G.LexusConfig.AimTouchSG then
+            cond = _G.LexusState.CustomTextData.AimTouchSGCond or 1
+            if _G.LexusConfig.AimTouchSGAutoFire then cond = 2 end
+            if cond == 1 and not isFiring then return end
+            prioMode = _G.LexusState.CustomTextData.AimTouchSGPrio or 1
+            boneIdx = _G.LexusState.CustomTextData.AimTouchSGBone or 2
+            speedVal = _G.LexusState.CustomTextData.AimTouchSGSpeed or 80
+            fovVal = _G.LexusState.CustomTextData.AimTouchSGFOV or 40
+            maxDistMeters = _G.LexusState.CustomTextData.AimTouchSGDist or 30
+            useVisCheck = _G.LexusConfig.AimTouchSGVisCheck
+            igKnock = _G.LexusConfig.AimTouchSGIgKnock
+            igBot = _G.LexusConfig.AimTouchSGIgBot
+            
+        elseif isADS then
+            if isSniper and _G.LexusConfig.AimTouchScopeSniper then
+                cond = _G.LexusState.CustomTextData.AimTouchSniperCond or 2
+                if cond == 1 and not isFiring then return end
+                prioMode = _G.LexusState.CustomTextData.AimTouchSniperPrio or 1
+                boneIdx = _G.LexusState.CustomTextData.AimTouchSniperBone or 1
+                speedVal = _G.LexusState.CustomTextData.AimTouchSniperSpeed or 30
+                fovVal = _G.LexusState.CustomTextData.AimTouchSniperFOV or 20
+                maxDistMeters = _G.LexusState.CustomTextData.AimTouchSniperDist or 400
+                useVisCheck = _G.LexusConfig.AimTouchSniperVisCheck
+                igKnock = _G.LexusConfig.AimTouchSniperIgKnock
+                igBot = _G.LexusConfig.AimTouchSniperIgBot
+                predVal = _G.LexusState.CustomTextData.AimTouchSniperPred or 0 -- Lấy giá trị dự đoán Sniper
+            elseif _G.LexusConfig.AimTouchScopeAll then
+                cond = _G.LexusState.CustomTextData.AimTouchScopeCond or 1
+                if cond == 1 and not isFiring then return end
+                prioMode = _G.LexusState.CustomTextData.AimTouchScopePrio or 1
+                boneIdx = _G.LexusState.CustomTextData.AimTouchScopeBone or 2
+                speedVal = _G.LexusState.CustomTextData.AimTouchScopeSpeed or 40
+                fovVal = _G.LexusState.CustomTextData.AimTouchScopeFOV or 20
+                maxDistMeters = _G.LexusState.CustomTextData.AimTouchScopeDist or 300
+                useVisCheck = _G.LexusConfig.AimTouchScopeVisCheck
+                igKnock = _G.LexusConfig.AimTouchScopeIgKnock
+                igBot = _G.LexusConfig.AimTouchScopeIgBot
+                predVal = _G.LexusState.CustomTextData.AimTouchScopePred or 0 -- Lấy giá trị dự đoán Súng thường
+                recoilCompVal = _G.LexusState.CustomTextData.AimTouchScopeRecoil or 0 -- Lấy giá trị bù giật
+            else
+                return
+            end
+        else
+            if not _G.LexusConfig.AimTouchHipfire then return end
+            cond = _G.LexusState.CustomTextData.AimTouchHipCond or 1
+            if cond == 1 and not isFiring then return end 
+            prioMode = _G.LexusState.CustomTextData.AimTouchHipPrio or 1
+            boneIdx = _G.LexusState.CustomTextData.AimTouchHipBone or 1
+            speedVal = _G.LexusState.CustomTextData.AimTouchHipSpeed or 50
+            fovVal = _G.LexusState.CustomTextData.AimTouchHipFOV or 30
+            maxDistMeters = _G.LexusState.CustomTextData.AimTouchHipDist or 250
+            useVisCheck = _G.LexusConfig.AimTouchHipVisCheck
+            igKnock = _G.LexusConfig.AimTouchHipIgKnock
+            igBot = _G.LexusConfig.AimTouchHipIgBot
+        end
+
+        local currentMaxDist = maxDistMeters * 100 
+
+        local enemies = _G.GetEnemyTargetsFromActors(currentMaxDist)
+        if not enemies or #enemies == 0 then return end
+        
+        local FVector2D = import("Vector2D")
+        local UGameplayStatics = import("GameplayStatics")
+        local KismetMathLibrary = import("KismetMathLibrary")
+        
+        local camManager = UGameplayStatics.GetPlayerCameraManager(pc, 0)
+        if not slua.isValid(camManager) then return end
+        
+        local camLoc = camManager:GetCameraLocation()
+        if not camLoc then return end
+        
+        local ui_util = require("client.common.ui_util")
+        if not ui_util then return end
+        
+        local viewportSize = ui_util.GetViewportSize()
+        if not viewportSize then return end
+        
+        local centerX = viewportSize.X * 0.5
+        local centerY = viewportSize.Y * 0.5
+        
+        local FOV_RADIUS = (fovVal / 100.0) * (viewportSize.X / 2.0)
+        
+        local bestTarget = nil
+        local bestScore = 99999999 
+        
+        local selBoneName = "head"
+        if boneIdx == 1 then selBoneName = "head"
+        elseif boneIdx == 2 then selBoneName = "spine_03"
+        elseif boneIdx == 3 then selBoneName = "spine_01"
+        elseif boneIdx == 4 then selBoneName = "pelvis" end
+
+        for i, target in ipairs(enemies) do
+            if not slua.isValid(target) then goto continue end
+            
+            pcall(function()
+                if slua.isValid(target.Mesh) then
+                    target.Mesh.MeshComponentUpdateFlag = 0
+                end
+            end)
+            
+            if igKnock and target.HealthStatus == 1 then goto continue end
+            
+            if igBot then
+                local tIsBot = false
+                if target.bIsAI == true or target.IsAI == true then tIsBot = true end
+                local pState = target.PlayerState
+                if slua.isValid(pState) and (pState.bIsABot or pState.bIsBot) then tIsBot = true end
+                if tIsBot then goto continue end
+            end
+            
+            -- [FIX TỤT FPS]: Khóa tia Raycast check tường, chỉ quét 0.2s một lần (Đủ mượt mà không cháy CPU)
+            if useVisCheck then
+                local curTime = os.clock()
+                local tId = type(target.GetUniqueID) == "function" and target:GetUniqueID() or tostring(target)
+                _G.AimTouchVisCache = _G.AimTouchVisCache or {}
+                if not _G.AimTouchVisCache[tId] or (curTime - _G.AimTouchVisCache[tId].time) > 0.2 then
+                    local isHidden = true
+                    pcall(function() if pc:LineOfSightTo(target) then isHidden = false end end)
+                    _G.AimTouchVisCache[tId] = { hidden = isHidden, time = curTime }
+                end
+                if _G.AimTouchVisCache[tId].hidden then goto continue end
+            end
+            
+            local tPos = target:GetBonePos(selBoneName, {X=0, Y=0, Z=0})
+            if not tPos or (tPos.X == 0 and tPos.Y == 0 and tPos.Z == 0) then
+                if type(target.GetSocketLocation) == "function" then
+                    tPos = target:GetSocketLocation(selBoneName)
+                end
+            end
+            if not tPos or (tPos.X == 0 and tPos.Y == 0 and tPos.Z == 0) then
+                if type(target.K2_GetActorLocation) == "function" then
+                    tPos = target:K2_GetActorLocation()
+                    if tPos then
+                        if boneIdx == 1 then tPos.Z = tPos.Z + 70
+                        elseif boneIdx == 2 then tPos.Z = tPos.Z + 40
+                        elseif boneIdx == 3 then tPos.Z = tPos.Z + 20 end
+                    end
+                end
+            end
+            if not tPos or (tPos.X == 0 and tPos.Y == 0 and tPos.Z == 0) then goto continue end
+            
+            local screen = FVector2D()
+            local success = pc:ProjectWorldLocationToScreen(tPos, screen, false)
+            if not success or screen.X <= 0 or screen.Y <= 0 then goto continue end
+            
+            local dx = screen.X - centerX
+            local dy = screen.Y - centerY
+            local distScreen = math.sqrt(dx*dx + dy*dy)
+            
+            if distScreen > FOV_RADIUS then goto continue end
+            
+            local currentScore = distScreen
+            if prioMode == 2 then currentScore = player:GetDistanceTo(target)
+            elseif prioMode == 3 then currentScore = target.Health or 100
+            elseif prioMode == 4 then 
+                local hp = target.Health or 100
+                local maxhp = target.HealthMax or 100
+                if maxhp <= 0 then maxhp = 100 end
+                currentScore = hp / maxhp
+            end
+            
+            if currentScore < bestScore then
+                bestScore = currentScore
+                bestTarget = target
+            end
+            
+            ::continue::
+        end
+        
+        if not slua.isValid(bestTarget) then return end
+        
+        local finalBonePos = bestTarget:GetBonePos(selBoneName, {X=0, Y=0, Z=0})
+        if not finalBonePos or (finalBonePos.X == 0 and finalBonePos.Y == 0 and finalBonePos.Z == 0) then
+            if type(bestTarget.GetSocketLocation) == "function" then
+                finalBonePos = bestTarget:GetSocketLocation(selBoneName)
+            end
+        end
+        if not finalBonePos or (finalBonePos.X == 0 and finalBonePos.Y == 0 and finalBonePos.Z == 0) then
+            if type(bestTarget.K2_GetActorLocation) == "function" then
+                finalBonePos = bestTarget:K2_GetActorLocation()
+                if finalBonePos then
+                    if boneIdx == 1 then finalBonePos.Z = finalBonePos.Z + 70
+                    elseif boneIdx == 2 then finalBonePos.Z = finalBonePos.Z + 40
+                    elseif boneIdx == 3 then finalBonePos.Z = finalBonePos.Z + 20 end
+                end
+            end
+        end
+        if not finalBonePos or (finalBonePos.X == 0 and finalBonePos.Y == 0 and finalBonePos.Z == 0) then return end
+        
+        local tVelocity = nil
+        pcall(function()
+            if type(bestTarget.GetVelocity) == "function" then
+                tVelocity = bestTarget:GetVelocity()
+            end
+        end)
+
+        -- LOGIC ĐOÁN HƯỚNG SÚNG CỐI
+        if isMortar and _G.LexusConfig.AimTouchMortar and predVal > 0 then
+            pcall(function()
+                if tVelocity and (tVelocity.X ~= 0 or tVelocity.Y ~= 0) then
+                    local approxDist = player:GetDistanceTo(bestTarget) / 100.0
+                    local approxToF = approxDist / 100.0 
+                    local predScale = predVal / 50.0
+                    finalBonePos.X = finalBonePos.X + (tVelocity.X * approxToF * predScale)
+                    finalBonePos.Y = finalBonePos.Y + (tVelocity.Y * approxToF * predScale)
+                end
+            end)
+        end
+
+        -- LOGIC 1: PREDICTION (SÚNG THƯỜNG)
+        if not isMortar and predVal > 0 then
+            pcall(function()
+                -- Nếu địch đang di chuyển
+                if tVelocity and (tVelocity.X ~= 0 or tVelocity.Y ~= 0) then
+                    local distToEnemy = player:GetDistanceTo(bestTarget) / 100.0 -- Khoảng cách mét
+                    
+                    -- Tính toán thời gian đạn bay (Time-Of-Flight) tỉ lệ thuận với khoảng cách và biến truyền vào
+                    -- Hệ số 800.0 đại diện cho tốc độ đạn rơi giả lập, 50.0 là mức trung bình slider
+                    local ToF = (distToEnemy / 800.0) * (predVal / 50.0) 
+                    
+                    -- Dịch chuyển toạ độ Aim lên trước hướng chạy
+                    finalBonePos.X = finalBonePos.X + (tVelocity.X * ToF)
+                    finalBonePos.Y = finalBonePos.Y + (tVelocity.Y * ToF)
+                end
+            end)
+        end
+
+        local rot = KismetMathLibrary.FindLookAtRotation(camLoc, finalBonePos)
+        if not rot then return end
+        
+        local currentRot = pc:GetControlRotation()
+        if not currentRot then return end
+        
+        local deltaYaw = rot.Yaw - currentRot.Yaw
+        local deltaPitch = rot.Pitch - currentRot.Pitch
+        
+        -- [BẮT ĐẦU FIX] Bù trừ chênh lệch Camera khi mở ống ngắm (ADS) để không bị lệch tâm
+        if isADS then
+            local camRot = nil
+            if type(camManager.GetCameraRotation) == "function" then
+                camRot = camManager:GetCameraRotation()
+            end
+            if camRot then
+                deltaYaw = deltaYaw - (camRot.Yaw - currentRot.Yaw)
+                deltaPitch = deltaPitch - (camRot.Pitch - currentRot.Pitch)
+            end
+        end
+        -- [KẾT THÚC FIX]
+
+        if deltaYaw > 180 then deltaYaw = deltaYaw - 360 end
+        if deltaYaw < -180 then deltaYaw = deltaYaw + 360 end
+        if deltaPitch > 180 then deltaPitch = deltaPitch - 360 end
+        if deltaPitch < -180 then deltaPitch = deltaPitch + 360 end
+        
+        local smoothFactor = 0.0
+        if speedVal >= 100 then
+            smoothFactor = 1.0
+        else
+            smoothFactor = (speedVal / 100.0) * 0.3
+            if smoothFactor < 0.01 then smoothFactor = 0.01 end
+        end
+        
+        local finalPitch = currentRot.Pitch + (deltaPitch * smoothFactor)
+        local finalYaw = currentRot.Yaw + (deltaYaw * smoothFactor)
+        
+        -- LOGIC 2: RECOIL COMPENSATION (ÉP TÂM / BÙ GIẬT TRÁNH BẮN QUÁ ĐẦU)
+        if recoilCompVal > 0 and isFiring then
+            local pullDownForce = (recoilCompVal / 50.0) * 1.5 
+            finalPitch = finalPitch - pullDownForce
+        end
+        
+        -- LOGIC TÍNH TOÁN GÓC BẮN THẬT SỰ CHO SÚNG CỐI
+        if isMortar and _G.LexusConfig.AimTouchMortar then
+            local targetPos = { X = finalBonePos.X, Y = finalBonePos.Y, Z = finalBonePos.Z }
+            local launchPos = camLoc
+            pcall(function()
+                if player.K2_GetActorLocation then
+                    local pLoc = player:K2_GetActorLocation()
+                    if pLoc then 
+                        launchPos = { X = pLoc.X, Y = pLoc.Y, Z = pLoc.Z + 50 } 
+                    end
+                end
+            end)
+
+            local function CalcMortarTrajectory(V, G, tX, tY, tZ)
+                local mDx = math.sqrt((tX - launchPos.X)^2 + (tY - launchPos.Y)^2) - 80 
+                if mDx < 500 then mDx = 500 end 
+                local mDy = tZ - launchPos.Z
+                
+                local minVSq = G * (mDy + math.sqrt(mDx*mDx + mDy*mDy))
+                if (V * V) < minVSq then
+                    V = math.sqrt(minVSq) + 100 
+                end
+
+                local v2 = V * V
+                local root = v2*v2 - G*(G*mDx*mDx + 2*mDy*v2)
+                
+                if root >= 0 then
+                    local angleRad = math.atan((v2 + math.sqrt(root)) / (G * mDx))
+                    local deg = math.deg(angleRad)
+                    if deg >= 35 and deg <= 89.5 then 
+                        return true, deg, mDx / (V * math.cos(angleRad)), mDx
+                    end
+                end
+                return false, 45, 0, mDx
+            end
+
+            local vNear, gNear = 9070, 980 * 2.8   
+            local vFar, gFar = 12520, 980 * 4.0    
+            local vUltra, gUltra = 16800, 980 * 4.5 
+            
+            local isValid, physAngle, ToF, finalDx = false, 45, 0, 0
+            
+            local okNear, angNear, tofNear, dxN = CalcMortarTrajectory(vNear, gNear, targetPos.X, targetPos.Y, targetPos.Z)
+            local okFar, angFar, tofFar, dxF = CalcMortarTrajectory(vFar, gFar, targetPos.X, targetPos.Y, targetPos.Z)
+            local okUltra, angUltra, tofUltra, dxU = CalcMortarTrajectory(vUltra, gUltra, targetPos.X, targetPos.Y, targetPos.Z)
+
+            if okNear and dxN <= 25000 then
+                isValid, physAngle, ToF, finalDx = okNear, angNear, tofNear, dxN
+            elseif okFar and dxF <= 40000 then
+                isValid, physAngle, ToF, finalDx = okFar, angFar, tofFar, dxF
+            elseif okUltra then
+                isValid, physAngle, ToF, finalDx = okUltra, angUltra, tofUltra, dxU
+            elseif okNear then
+                isValid, physAngle, ToF, finalDx = okNear, angNear, tofNear, dxN
+            end
+
+            local targetCameraPitch = ((physAngle - 45) / 43.0) * 90.0 - 60.0
+            local targetCameraYaw = rot.Yaw
+
+            local deltaPitchMortar = targetCameraPitch - currentRot.Pitch
+            local deltaYawMortar = targetCameraYaw - currentRot.Yaw
+
+            if deltaPitchMortar > 180 then deltaPitchMortar = deltaPitchMortar - 360 end
+            if deltaPitchMortar < -180 then deltaPitchMortar = deltaPitchMortar + 360 end
+            if deltaYawMortar > 180 then deltaYawMortar = deltaYawMortar - 360 end
+            if deltaYawMortar < -180 then deltaYawMortar = deltaYawMortar + 360 end
+            
+            finalPitch = currentRot.Pitch + (deltaPitchMortar * smoothFactor)
+            finalYaw = currentRot.Yaw + (deltaYawMortar * smoothFactor)
+        end
+
+        local finalRot = { Pitch = finalPitch, Yaw = finalYaw, Roll = 0 }
+        pc:SetControlRotation(finalRot, "AimTouch")
+        
+        if isShotgun and _G.LexusConfig.AimTouchSGAutoFire then
+            pcall(function()
+                local distToTarget = player:GetDistanceTo(bestTarget) / 100
+                if distToTarget <= maxDistMeters then
+                    player.bIsWeaponFiring = true
+                    if type(player.SetIsWeaponFiring) == "function" then player:SetIsWeaponFiring(true) end
+                    if slua.isValid(pc) and type(pc.SetIsWeaponFiring) == "function" then pc:SetIsWeaponFiring(true) end
+                    local wepMgr = player.WeaponManagerComponent
+                    if slua.isValid(wepMgr) then wepMgr.bIsWeaponFiring = true end
+                    
+                    local currentWep = player:GetCurrentWeapon()
+                    if slua.isValid(currentWep) and type(currentWep.StartFire) == "function" then 
+                        currentWep:StartFire() 
+                    end
+                    _G.LexusState.IsAutoFiring = true
+                end
+            end)
+        end
+
+    end)
+end
+
+
+
+------------------------------------------------------------------------------
+
 local Menu = {}
 
 function Menu.Wire()
@@ -2753,7 +3542,8 @@ function Menu.Wire()
   if loc and not loc._AegisLocHooked then
     local FakeText = {
       [999000] = "UX_Official MENU",
-      [999001] = "Visuals (ESP)"
+      [999001] = "Visuals (ESP)",
+      [999002] = "Weapon Customize"
     }
     for _, fn in ipairs({"GetLocalizeResStr", "GetText", "GetTextByID", "GetLocalText", "GetLocalizeStr"}) do
       if loc[fn] then
@@ -2800,51 +3590,151 @@ function Menu.Wire()
         MinValue = 1, MaxValue = 100, min = 1, max = 100,
         GetFunc = function() return (A.Config.IpadFov or 120) - 90 end,
         SetFunc = function(c, v) A.Config.IpadFov = 90 + v return true end },
-      { Key = "ModMenu_Weapons", UI = alias.Switcher, Text = "Weapons Location (Master)",
+   { Key = "ModMenu_Weapons", UI = alias.Switcher, Text = "Weapons",
         GetFunc = function() return A.Config.Weapons end,
-        SetFunc = function(c, v) A.Config.Weapons = v return true end },
-      { Key = "ModMenu_WpnSniper", UI = alias.Switcher, Text = "Sniper",
-        GetFunc = function() return A.Config.WpnSniper end,
-        SetFunc = function(c, v) A.Config.WpnSniper = v return true end },
-      { Key = "ModMenu_WpnLuckyEgg", UI = alias.Switcher, Text = "Lucky Egg",
-        GetFunc = function() return A.Config.WpnLuckyEgg end,
-        SetFunc = function(c, v) A.Config.WpnLuckyEgg = v return true end },
-      { Key = "ModMenu_WpnAR", UI = alias.Switcher, Text = "AR",
-        GetFunc = function() return A.Config.WpnAR end,
-        SetFunc = function(c, v) A.Config.WpnAR = v return true end },
-      { Key = "ModMenu_WpnSMG", UI = alias.Switcher, Text = "SMG",
-        GetFunc = function() return A.Config.WpnSMG end,
-        SetFunc = function(c, v) A.Config.WpnSMG = v return true end },
-      { Key = "ModMenu_WpnShotgun", UI = alias.Switcher, Text = "Shotgun",
-        GetFunc = function() return A.Config.WpnShotgun end,
-        SetFunc = function(c, v) A.Config.WpnShotgun = v return true end },
-      { Key = "ModMenu_WpnLMG", UI = alias.Switcher, Text = "LMG",
-        GetFunc = function() return A.Config.WpnLMG end,
-        SetFunc = function(c, v) A.Config.WpnLMG = v return true end },
-      { Key = "ModMenu_WpnPistol", UI = alias.Switcher, Text = "Pistol",
-        GetFunc = function() return A.Config.WpnPistol end,
-        SetFunc = function(c, v) A.Config.WpnPistol = v return true end },
-      { Key = "ModMenu_WpnMelee", UI = alias.Switcher, Text = "Melee",
-        GetFunc = function() return A.Config.WpnMelee end,
-        SetFunc = function(c, v) A.Config.WpnMelee = v return true end },
-      { Key = "ModMenu_WpnSpecial", UI = alias.Switcher, Text = "Special",
-        GetFunc = function() return A.Config.WpnSpecial end,
-        SetFunc = function(c, v) A.Config.WpnSpecial = v return true end },
-      { Key = "ModMenu_WpnScope", UI = alias.Switcher, Text = "Scope",
-        GetFunc = function() return A.Config.WpnScope end,
-        SetFunc = function(c, v) A.Config.WpnScope = v return true end },
-      { Key = "ModMenu_WpnDistance", UI = alias.Slider, Text = "Scan Distance (m)",
-        MinValue = 50, MaxValue = 500, min = 50, max = 500,
-        GetFunc = function() return A.Config.WpnScanDistance or 500 end,
-        SetFunc = function(c, v) A.Config.WpnScanDistance = math.max(50, math.min(500, math.floor(v))) return true end },
-      { Key = "ModMenu_WpnInterval", UI = alias.Slider, Text = "Scan Interval (s)",
-        MinValue = 1, MaxValue = 5, min = 1, max = 5,
-        GetFunc = function() return A.Config.WpnScanInterval or 1 end,
-        SetFunc = function(c, v) A.Config.WpnScanInterval = math.max(1, math.min(5, math.floor(v))) return true end }
+        SetFunc = function(c, v) A.Config.Weapons = v return true end }
     }
+
+    local AliasMap = alias
+    local T = function(_, english) return english end
+        local StackAimbotV2 = {
+            { Key = "ModMenu_AT_Ex", UI = AliasMap.TitleSwitcher, Text = T("▶ Bật Aimbot Roy & Custom", "▶ Enable Custom Aimbot V2"), ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchEnable end, SetFunc = function(c,v) _G.LexusConfig.AimTouchEnable = v return true end },
+            
+            -- HIPFIRE (TÂM TRẮNG)
+            { Key = "ModMenu_AT_Hip_Ex", UI = AliasMap.TitleSwitcher, Text = T("   ▶ Aimbot Tâm Trắng", "   ▶ Hipfire Aimbot"), ExpandHandle = "ModMenu_AT_Ex", ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchHipfire end, SetFunc = function(c,v) _G.LexusConfig.AimTouchHipfire = v return true end },
+            { Key = "ModMenu_AT_Hip_IgKnock", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Địch Knock", "      Ignore Knocked"), ExpandHandle = "ModMenu_AT_Hip_Ex", GetFunc = function() return _G.LexusConfig.AimTouchHipIgKnock end, SetFunc = function(c,v) _G.LexusConfig.AimTouchHipIgKnock = v return true end },
+            { Key = "ModMenu_AT_Hip_IgBot", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Bot", "      Ignore Bots"), ExpandHandle = "ModMenu_AT_Hip_Ex", GetFunc = function() return _G.LexusConfig.AimTouchHipIgBot end, SetFunc = function(c,v) _G.LexusConfig.AimTouchHipIgBot = v return true end },
+            { Key = "ModMenu_AT_Hip_Vis", UI = AliasMap.Switcher, Text = T("      Check Tường (VisCheck)", "      Visibility Check"), ExpandHandle = "ModMenu_AT_Hip_Ex", GetFunc = function() return _G.LexusConfig.AimTouchHipVisCheck end, SetFunc = function(c,v) _G.LexusConfig.AimTouchHipVisCheck = v return true end },
+            { Key = "ModMenu_AT_Hip_Prio", UI = AliasMap.Slider, Text = T("      Ưu Tiên (1:Tâm 2:Gần 3:HP)", "      Priority (1:Crosshair 2:Distance 3:HP)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchHipPrio or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchHipPrio = val return true end },
+            { Key = "ModMenu_AT_Hip_Bone", UI = AliasMap.Slider, Text = T("      Vị Trí (1:Đầu 2:Ngực 3:Bụng 4:Hông)", "      Bone (1:Head 2:Chest 3:Stomach 4:Pelvis)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchHipBone or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchHipBone = val return true end },
+            { Key = "ModMenu_AT_Hip_Cond", UI = AliasMap.Slider, Text = T("      Điều Kiện (1:Bắn mới Aim, 2:Luôn Aim)", "      Trigger (1:On Fire, 2:Always)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 2, min = 1, max = 2, Min = 1, Max = 2, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchHipCond or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 2 then val = 2 end; _G.LexusState.CustomTextData.AimTouchHipCond = val return true end },
+            { Key = "ModMenu_AT_Hip_Spd", UI = AliasMap.Slider, Text = T("      Độ Mượt / Tốc Độ (1-100)", "      Smoothness / Speed (1-100)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchHipSpeed or 50 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchHipSpeed = v return true end },
+            { Key = "ModMenu_AT_Hip_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-100)", "      FOV Radius (1-100)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchHipFOV or 30 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchHipFOV = v return true end },
+            { Key = "ModMenu_AT_Hip_Dist", UI = AliasMap.Slider, Text = T("      Khoảng Cách (1-500m)", "      Distance Limit (1-500m)"), ExpandHandle = "ModMenu_AT_Hip_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return math.floor((_G.LexusState.CustomTextData.AimTouchHipDist or 250) / 5) end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchHipDist = v * 5 return true end },
+
+            -- AIMBOT SHOTGUN
+            { Key = "ModMenu_AT_SG_Ex", UI = AliasMap.TitleSwitcher, Text = T("   ▶ Aimbot Shotgun", "   ▶ Shotgun Aimbot"), ExpandHandle = "ModMenu_AT_Ex", ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchSG end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSG = v return true end },
+            { Key = "ModMenu_AT_SG_AutoFire", UI = AliasMap.Switcher, Text = T("      Tự Động Bắn", "      Auto Fire"), ExpandHandle = "ModMenu_AT_SG_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSGAutoFire end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSGAutoFire = v return true end },
+            { Key = "ModMenu_AT_SG_IgKnock", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Địch Knock", "      Ignore Knocked"), ExpandHandle = "ModMenu_AT_SG_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSGIgKnock end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSGIgKnock = v return true end },
+            { Key = "ModMenu_AT_SG_IgBot", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Bot", "      Ignore Bots"), ExpandHandle = "ModMenu_AT_SG_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSGIgBot end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSGIgBot = v return true end },
+            { Key = "ModMenu_AT_SG_Vis", UI = AliasMap.Switcher, Text = T("      Check Tường (VisCheck)", "      Visibility Check"), ExpandHandle = "ModMenu_AT_SG_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSGVisCheck end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSGVisCheck = v return true end },
+            { Key = "ModMenu_AT_SG_Prio", UI = AliasMap.Slider, Text = T("      Ưu Tiên (1:Tâm 2:Gần 3:HP)", "      Priority (1:Crosshair 2:Distance 3:HP)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGPrio or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchSGPrio = val return true end },
+            { Key = "ModMenu_AT_SG_Bone", UI = AliasMap.Slider, Text = T("      Vị Trí (1:Đầu 2:Ngực 3:Bụng 4:Hông)", "      Bone (1:Head 2:Chest 3:Stomach 4:Pelvis)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGBone or 2 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchSGBone = val return true end },
+            { Key = "ModMenu_AT_SG_Cond", UI = AliasMap.Slider, Text = T("      Điều Kiện (1:Bắn mới Aim, 2:Luôn Aim)", "      Trigger (1:On Fire, 2:Always)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 2, min = 1, max = 2, Min = 1, Max = 2, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGCond or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 2 then val = 2 end; _G.LexusState.CustomTextData.AimTouchSGCond = val return true end },
+            { Key = "ModMenu_AT_SG_Spd", UI = AliasMap.Slider, Text = T("      Độ Mượt / Tốc Độ (1-100)", "      Smoothness / Speed (1-100)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGSpeed or 80 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSGSpeed = v return true end },
+            { Key = "ModMenu_AT_SG_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-100)", "      FOV Radius (1-100)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGFOV or 40 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSGFOV = v return true end },
+            { Key = "ModMenu_AT_SG_Dist", UI = AliasMap.Slider, Text = T("      Khoảng Cách (1-100m)", "      Distance Limit (1-100m)"), ExpandHandle = "ModMenu_AT_SG_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSGDist or 30 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSGDist = v return true end },
+            
+            -- SCOPE ALL (SÚNG THƯỜNG KHI MỞ SCOPE)
+            { Key = "ModMenu_AT_ScopeAll_Ex", UI = AliasMap.TitleSwitcher, Text = T("   ▶ Aimbot Mở Scope", "   ▶ Scope Aimbot"), ExpandHandle = "ModMenu_AT_Ex", ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchScopeAll end, SetFunc = function(c,v) _G.LexusConfig.AimTouchScopeAll = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_IgKnock", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Địch Knock", "      Ignore Knocked"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", GetFunc = function() return _G.LexusConfig.AimTouchScopeIgKnock end, SetFunc = function(c,v) _G.LexusConfig.AimTouchScopeIgKnock = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_IgBot", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Bot", "      Ignore Bots"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", GetFunc = function() return _G.LexusConfig.AimTouchScopeIgBot end, SetFunc = function(c,v) _G.LexusConfig.AimTouchScopeIgBot = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_Vis", UI = AliasMap.Switcher, Text = T("      Check Tường (VisCheck)", "      Visibility Check"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", GetFunc = function() return _G.LexusConfig.AimTouchScopeVisCheck end, SetFunc = function(c,v) _G.LexusConfig.AimTouchScopeVisCheck = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_Prio", UI = AliasMap.Slider, Text = T("      Ưu Tiên (1:Tâm 2:Gần 3:HP)", "      Priority (1:Crosshair 2:Distance 3:HP)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopePrio or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchScopePrio = val return true end },
+            { Key = "ModMenu_AT_ScopeAll_Bone", UI = AliasMap.Slider, Text = T("      Vị Trí (1:Đầu 2:Ngực 3:Bụng 4:Hông)", "      Bone (1:Head 2:Chest 3:Stomach 4:Pelvis)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopeBone or 2 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchScopeBone = val return true end },
+            { Key = "ModMenu_AT_ScopeAll_Cond", UI = AliasMap.Slider, Text = T("      Điều Kiện (1:Bắn mới Aim, 2:Luôn Aim)", "      Trigger (1:On Fire, 2:Always)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 2, min = 1, max = 2, Min = 1, Max = 2, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopeCond or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 2 then val = 2 end; _G.LexusState.CustomTextData.AimTouchScopeCond = val return true end },
+            { Key = "ModMenu_AT_ScopeAll_Spd", UI = AliasMap.Slider, Text = T("      Độ Mượt / Tốc Độ (1-100)", "      Smoothness / Speed (1-100)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopeSpeed or 40 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchScopeSpeed = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-100)", "      FOV Radius (1-100)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopeFOV or 20 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchScopeFOV = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_Dist", UI = AliasMap.Slider, Text = T("      Khoảng Cách (1-500m)", "      Distance Limit (1-500m)"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return math.floor((_G.LexusState.CustomTextData.AimTouchScopeDist or 300) / 5) end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchScopeDist = v * 5 return true end },
+            { Key = "ModMenu_AT_ScopeAll_Pred", UI = AliasMap.Slider, Text = T("      Dự Đoán Hướng Chạy", "      Prediction Value"), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 0, MaxValue = 100, min = 0, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopePred or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchScopePred = v return true end },
+            { Key = "ModMenu_AT_ScopeAll_Recoil", UI = AliasMap.Slider, Text = T("      Bù Giật Tự Động", "      Auto Recoil Comp."), ExpandHandle = "ModMenu_AT_ScopeAll_Ex", MinValue = 0, MaxValue = 50, min = 0, max = 50, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchScopeRecoil or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchScopeRecoil = v return true end },
+
+            -- SCOPE SNIPER (SÚNG NGẮM/TỈA)
+            { Key = "ModMenu_AT_Sniper_Ex", UI = AliasMap.TitleSwitcher, Text = T("   ▶ Aimbot Mở Scope (Súng Ngắm/Tỉa)", "   ▶ Sniper Aimbot"), ExpandHandle = "ModMenu_AT_Ex", ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchScopeSniper end, SetFunc = function(c,v) _G.LexusConfig.AimTouchScopeSniper = v return true end },
+            { Key = "ModMenu_AT_Sniper_IgKnock", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Địch Knock", "      Ignore Knocked"), ExpandHandle = "ModMenu_AT_Sniper_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSniperIgKnock end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSniperIgKnock = v return true end },
+            { Key = "ModMenu_AT_Sniper_IgBot", UI = AliasMap.Switcher, Text = T("      Bỏ Qua Bot", "      Ignore Bots"), ExpandHandle = "ModMenu_AT_Sniper_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSniperIgBot end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSniperIgBot = v return true end },
+            { Key = "ModMenu_AT_Sniper_Vis", UI = AliasMap.Switcher, Text = T("      Check Tường (VisCheck)", "      Visibility Check"), ExpandHandle = "ModMenu_AT_Sniper_Ex", GetFunc = function() return _G.LexusConfig.AimTouchSniperVisCheck end, SetFunc = function(c,v) _G.LexusConfig.AimTouchSniperVisCheck = v return true end },
+            { Key = "ModMenu_AT_Sniper_Prio", UI = AliasMap.Slider, Text = T("      Ưu Tiên (1:Tâm 2:Gần 3:HP)", "      Priority (1:Crosshair 2:Distance 3:HP)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperPrio or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchSniperPrio = val return true end },
+            { Key = "ModMenu_AT_Sniper_Bone", UI = AliasMap.Slider, Text = T("      Vị Trí (1:Đầu 2:Ngực 3:Bụng 4:Hông)", "      Bone (1:Head 2:Chest 3:Stomach 4:Pelvis)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 4, min = 1, max = 4, Min = 1, Max = 4, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperBone or 1 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 4 then val = 4 end; _G.LexusState.CustomTextData.AimTouchSniperBone = val return true end },
+            { Key = "ModMenu_AT_Sniper_Cond", UI = AliasMap.Slider, Text = T("      Điều Kiện (1:Bắn mới Aim, 2:Luôn Aim)", "      Trigger (1:On Fire, 2:Always)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 2, min = 1, max = 2, Min = 1, Max = 2, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperCond or 2 end, SetFunc = function(c,v) local val = math.floor(v+0.5); if val < 1 then val = 1 end; if val > 2 then val = 2 end; _G.LexusState.CustomTextData.AimTouchSniperCond = val return true end },
+            { Key = "ModMenu_AT_Sniper_Spd", UI = AliasMap.Slider, Text = T("      Độ Mượt / Tốc Độ (1-100)", "      Smoothness / Speed (1-100)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperSpeed or 30 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSniperSpeed = v return true end },
+            { Key = "ModMenu_AT_Sniper_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-100)", "      FOV Radius (1-100)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperFOV or 20 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSniperFOV = v return true end },
+            { Key = "ModMenu_AT_Sniper_Dist", UI = AliasMap.Slider, Text = T("      Khoảng Cách (1-500m)", "      Distance Limit (1-500m)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 1, MaxValue = 100, min = 1, max = 100, GetFunc = function() return math.floor((_G.LexusState.CustomTextData.AimTouchSniperDist or 400) / 5) end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSniperDist = v * 5 return true end },
+            { Key = "ModMenu_AT_Sniper_Pred", UI = AliasMap.Slider, Text = T("      Dự Đoán Hướng Chạy (0-100)", "      Prediction Value (0-100)"), ExpandHandle = "ModMenu_AT_Sniper_Ex", MinValue = 0, MaxValue = 100, min = 0, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchSniperPred or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchSniperPred = v return true end },
+
+            -- AIMBOT SÚNG CỐI (MORTAR)
+            { Key = "ModMenu_AT_Mortar_Ex", UI = AliasMap.TitleSwitcher, Text = T("   ▶ Aimbot Súng Cối (Mortar)", "   ▶ Mortar Aimbot"), ExpandHandle = "ModMenu_AT_Ex", ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchMortar end, SetFunc = function(c,v) _G.LexusConfig.AimTouchMortar = v return true end },
+            { Key = "ModMenu_AT_Mortar_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-360)", "      FOV Radius (1-360)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 1, MaxValue = 360, min = 1, max = 360, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarFOV or 360 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarFOV = v return true end },
+            { Key = "ModMenu_AT_Mortar_Pred", UI = AliasMap.Slider, Text = T("      Dự Đoán Hướng Chạy (0-100)", "      Prediction Value (0-100)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 0, MaxValue = 100, min = 0, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarPred or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarPred = v return true end }
+        }
+    for _, item in ipairs(StackAimbotV2) do
+      table.insert(stack, item)
+    end
+    -- Weapon catalog supplied for the Weapon Customize tab.
+    local WeaponCategories = { "AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "LuckyEgg" }
+    local WeaponColors = {
+      AR={R=255,G=255,B=0,A=255}, SMG={R=0,G=255,B=255,A=255},
+      Sniper={R=255,G=128,B=0,A=255}, Shotgun={R=0,G=255,B=0,A=255},
+      LMG={R=255,G=255,B=255,A=255}, Pistol={R=200,G=200,B=200,A=255},
+      Melee={R=150,G=150,B=150,A=255}, Special={R=255,G=0,B=255,A=255},
+      Scope={R=0,G=0,B=255,A=255}, LuckyEgg={R=255,G=0,B=0,A=255}
+    }
+    local WeaponDatabase = {
+      [101001]={"AKM","AR"}, [101002]={"M16A4","AR"}, [101003]={"SCAR-L","AR"},
+      [101004]={"M416","AR"}, [101005]={"Groza","AR"}, [101006]={"AUG","AR"},
+      [101007]={"QBZ","AR"}, [101008]={"M762","AR"}, [101009]={"Mk47 Mutant","AR"},
+      [101010]={"G36C","AR"}, [101011]={"AC-VAL","AR"}, [101012]={"Honey Badger","AR"},
+      [101100]={"FAMAS","AR"}, [101101]={"ASM Abakan AR","AR"}, [101102]={"ACE32","AR"},
+      [102001]={"UZI","SMG"}, [102002]={"UMP45","SMG"}, [102003]={"Vector","SMG"},
+      [102004]={"Thompson SMG","SMG"}, [102005]={"PP-19 Bizon","SMG"}, [102007]={"MP5K","SMG"},
+      [102008]={"JS9","SMG"}, [102105]={"P90","SMG"},
+      [103001]={"Kar98K","Sniper"}, [103002]={"M24","Sniper"}, [103003]={"AWM","Sniper"},
+      [103004]={"SKS","Sniper"}, [103005]={"VSS","Sniper"}, [103006]={"Mini14","Sniper"},
+      [103007]={"Mk14","Sniper"}, [103008]={"Win94","Sniper"}, [103009]={"SLR","Sniper"},
+      [103010]={"QBU","Sniper"}, [103011]={"Mosin Nagant","Sniper"}, [103012]={"AMR","Sniper"},
+      [103100]={"Mk12","Sniper"}, [103101]={"TR-2A Air Gun","Sniper"}, [103102]={"DSR","Sniper"},
+      [103103]={"Sniper Rifle","Sniper"}, [103104]={"Sniper Rifle","Sniper"}, [103105]={"SR","Sniper"},
+      [104001]={"S686","Shotgun"}, [104002]={"S1897","Shotgun"}, [104003]={"S12K","Shotgun"},
+      [104004]={"DBS","Shotgun"}, [104100]={"SPAS-12","Shotgun"}, [104101]={"M1014","Shotgun"},
+      [104102]={"NS2000","Shotgun"}, [105001]={"M249","LMG"}, [105002]={"DP-28","LMG"},
+      [105003]={"M134","LMG"}, [105010]={"MG3","LMG"},
+      [106001]={"P92","Pistol"}, [106002]={"P1911","Pistol"}, [106003]={"R1895","Pistol"},
+      [106004]={"P18C","Pistol"}, [106005]={"R45","Pistol"}, [106006]={"Sawed-off","Pistol"},
+      [106008]={"Skorpion","Pistol"}, [106010]={"Desert Eagle","Pistol"},
+      [106007]={"Flare Gun","Pistol"}, [106009]={"Flare Gun","Pistol"},
+      [107001]={"Crossbow","Special"}, [107002]={"RPG-7","Special"}, [107003]={"Riot Shield","Special"},
+      [108001]={"Machete","Melee"}, [108002]={"Crowbar","Melee"}, [108003]={"Sickle","Melee"},
+      [108004]={"Pan","Melee"}, [108005]={"Dagger","Melee"},
+      [203001]={"Red Dot Sight","Scope"}, [203002]={"Holographic Sight","Scope"},
+      [203003]={"2x Scope","Scope"}, [203004]={"4x Scope","Scope"}, [203005]={"8x Scope","Scope"},
+      [203014]={"3x Scope","Scope"}, [203015]={"6x Scope","Scope"},
+      [2230001]={"Lv. 1 Lucky Egg","LuckyEgg"}, [2230002]={"Lv. 2 Lucky Egg","LuckyEgg"},
+      [2230003]={"Lv. 3 Lucky Egg","LuckyEgg"}, [2230004]={"Lv. 4 Lucky Egg","LuckyEgg"}
+    }
+    local WeaponRows = {}
+    for id, info in pairs(WeaponDatabase) do
+      WeaponRows[#WeaponRows + 1] = { Id = id, Name = info[1], Category = info[2] }
+    end
+    table.sort(WeaponRows, function(a, b) return a.Id < b.Id end)
+
+    local weaponStack = {
+      { Key = "WeaponCustomize_Enable", UI = alias.Switcher, Text = "Enable Weapon Customize",
+        GetFunc = function() return A.Config.WeaponCustomizeEnabled end,
+        SetFunc = function(c, v) A.Config.WeaponCustomizeEnabled = v return true end },
+      { Key = "WeaponCustomize_Category", UI = alias.Slider, Text = "Weapon Category (1-10)",
+        MinValue = 1, MaxValue = #WeaponCategories, min = 1, max = #WeaponCategories,
+        GetFunc = function() return A.Config.WeaponCustomizeCategoryIndex or 1 end,
+        SetFunc = function(c, v) A.Config.WeaponCustomizeCategoryIndex = math.max(1, math.min(#WeaponCategories, math.floor(v + 0.5))); return true end },
+      { Key = "WeaponCustomize_Weapon", UI = alias.Slider, Text = "Weapon Entry (1-" .. tostring(#WeaponRows) .. ")",
+        MinValue = 1, MaxValue = #WeaponRows, min = 1, max = #WeaponRows,
+        GetFunc = function() return A.Config.WeaponCustomizeIndex or 1 end,
+        SetFunc = function(c, v) A.Config.WeaponCustomizeIndex = math.max(1, math.min(#WeaponRows, math.floor(v + 0.5))); return true end },
+      { Key = "WeaponCustomize_SkinId", UI = alias.Slider, Text = "Skin ID (0-999999)",
+        MinValue = 0, MaxValue = 999999, min = 0, max = 999999,
+        GetFunc = function() return A.Config.WeaponCustomizeSkinId or 0 end,
+        SetFunc = function(c, v) A.Config.WeaponCustomizeSkinId = math.max(0, math.min(999999, math.floor(v + 0.5))); return true end },
+      { Key = "WeaponCustomize_Level", UI = alias.Slider, Text = "Skin Level (1-7)",
+        MinValue = 1, MaxValue = 7, min = 1, max = 7,
+        GetFunc = function() return A.Config.WeaponCustomizeLevel or 1 end,
+        SetFunc = function(c, v) A.Config.WeaponCustomizeLevel = math.max(1, math.min(7, math.floor(v + 0.5))); return true end }
+    }
+
     pageDef.ModMenu = {
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
-      Category = { { Key = "Cat_ESP", Text = 999001, Stack = stack } }
+      Category = {
+        { Key = "Cat_ESP", Text = 999001, Stack = stack },
+        { Key = "Cat_WeaponCustomize", Text = 999002, Stack = weaponStack }
+      }
     }
     for i = #catalog, 1, -1 do
       if type(catalog[i]) == "table" and catalog[i].Key == "ModMenu" then table.remove(catalog, i) end
@@ -2961,6 +3851,12 @@ local function Beat()
     MOKING._matchEntered = false
     MOKING._popupShown = false
     return
+  end
+
+  if A.Config.AimTouchEnable then
+    pcall(function()
+      if type(_G.AimTouch) == "function" then _G.AimTouch() end
+    end)
   end
 
   Menu.Announce()
