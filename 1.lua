@@ -3596,6 +3596,10 @@ function Menu.Wire()
         MinValue = 1, MaxValue = 100, min = 1, max = 100,
         GetFunc = function() return (A.Config.IpadFov or 120) - 90 end,
         SetFunc = function(c, v) A.Config.IpadFov = 90 + v return true end },
+      -- Master switch: enables/disables the complete weapon display system.
+      { Key = "ModMenu_Weapons", UI = alias.Switcher, Text = "Weapons",
+        GetFunc = function() return A.Config.Weapons == true end,
+        SetFunc = function(c, v) A.Config.Weapons = (v == true); return true end },
     }
 
     local AliasMap = alias
