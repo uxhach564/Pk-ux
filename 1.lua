@@ -3645,9 +3645,35 @@ function Menu.Wire()
     end
 
     -- Weapon Customize: master switch, category switches, and named weapon switches.
-    -- Category switches expand/collapse their own weapon lists. Individual weapon
-    -- labels show names only; numeric IDs remain internal configuration keys.
-    -- The game-specific skin setter is not present in this source file.
+    -- This layer owns UI/config state. Applying a skin to the live weapon requires
+    -- the game's weapon-skin API, which is not defined in this source file.
+    local function WeaponCustomizeToBool(value)
+      if value == true or value == 1 then return true end
+      if type(value) == "string" then
+        local normalized = string.lower(value)
+        return normalized == "true" or normalized == "1" or normalized == "on"
+      end
+      return false
+    end
+
+    local function WeaponCustomizeIsActive(weaponId, categoryName)
+      return A.Config.WeaponCustomizeEnabled == true
+        and A.Config.WeaponCustomizeCategories[categoryName] == true
+        and A.Config.WeaponCustomizeItems[tonumber(weaponId)] == true
+    end
+
+    -- Public state bridge for the game's skin handler, if one is supplied by the
+    -- runtime or another project module. No undocumented engine method is guessed.
+    _G.UXOfficial_GetWeaponCustomizeState = function(weaponId, categoryName)
+      return {
+        Enabled = A.Config.WeaponCustomizeEnabled == true,
+        CategoryEnabled = A.Config.WeaponCustomizeCategories[categoryName] == true,
+        WeaponEnabled = A.Config.WeaponCustomizeItems[tonumber(weaponId)] == true,
+        Active = WeaponCustomizeIsActive(weaponId, categoryName),
+        SkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0,
+        SkinLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
+      }
+    end
     A.Config.WeaponCustomizeEnabled = A.Config.WeaponCustomizeEnabled == true
     A.Config.WeaponCustomizeSkinId = tonumber(A.Config.WeaponCustomizeSkinId) or 0
     A.Config.WeaponCustomizeLevel = tonumber(A.Config.WeaponCustomizeLevel) or 1
@@ -3665,7 +3691,7 @@ function Menu.Wire()
         Text = "Enable Weapon Customize",
         GetFunc = function() return A.Config.WeaponCustomizeEnabled == true end,
         SetFunc = function(c, v)
-          A.Config.WeaponCustomizeEnabled = v == true
+          A.Config.WeaponCustomizeEnabled = WeaponCustomizeToBool(v)
           return true
         end
       },
@@ -3708,7 +3734,7 @@ function Menu.Wire()
           return A.Config.WeaponCustomizeCategories[categoryNameLocal] == true
         end,
         SetFunc = function(c, v)
-          A.Config.WeaponCustomizeCategories[categoryNameLocal] = v == true
+          A.Config.WeaponCustomizeCategories[categoryNameLocal] = WeaponCustomizeToBool(v)
           return true
         end
       })
@@ -3741,7 +3767,7 @@ function Menu.Wire()
             return A.Config.WeaponCustomizeItems[weaponId] == true
           end,
           SetFunc = function(c, v)
-            A.Config.WeaponCustomizeItems[weaponId] = v == true
+            A.Config.WeaponCustomizeItems[weaponId] = WeaponCustomizeToBool(v)
             return true
           end
         })
