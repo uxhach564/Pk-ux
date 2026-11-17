@@ -2886,8 +2886,8 @@ end
 local SupplyItems = {}
 A.Config.AirDropESP = A.Config.AirDropESP ~= false
 A.Config.LootCrateESP = A.Config.LootCrateESP ~= false
-A.Config.AirDropDistance = A.Config.AirDropDistance or 300
-A.Config.LootCrateDistance = A.Config.LootCrateDistance or 300
+A.Config.AirDropDistance = A.Config.AirDropDistance or 1000
+A.Config.LootCrateDistance = A.Config.LootCrateDistance or 1000
 
 function SupplyItems.Scan(pc)
   if not Around(pc) then return end
@@ -3673,17 +3673,18 @@ function Menu.Wire()
         MinValue = 1, MaxValue = 100, min = 1, max = 100,
         GetFunc = function() return (A.Config.IpadFov or 120) - 90 end,
         SetFunc = function(c, v) A.Config.IpadFov = 90 + v return true end },
-      -- Master switch: enables/disables the complete weapon display system.
-      { Key = "ModMenu_Weapons", UI = alias.Switcher, Text = "Weapons",
-        GetFunc = function() return A.Config.Weapons == true end,
-        SetFunc = function(c, v) A.Config.Weapons = (v == true); return true end },
     }
 
     local AliasMap = alias
 
     -- Weapon Setting is a separate top-level tab beside Visuals (ESP).
     -- Category rows expand into name-only weapon rows; numeric IDs stay internal.
-    local weaponStack = {}
+    local weaponStack = {
+      -- Master switch is shown before AR, matching the requested Weapon Setting layout.
+      { Key = "ModMenu_Weapons", UI = AliasMap.Switcher, Text = "Weapons",
+        GetFunc = function() return A.Config.Weapons == true end,
+        SetFunc = function(c, v) A.Config.Weapons = (v == true); return true end },
+    }
     for _, category in ipairs(WpnCategoryOrder) do
       local categoryName = category
       local categoryKey = "ModMenu_WeaponCategory_" .. categoryName
@@ -3725,7 +3726,7 @@ function Menu.Wire()
       end
     end
 
-    -- Supply-item controls use the same expandable TitleSwitcher + child setting pattern as weapons.
+    -- AirDrop and Loot Crate controls are appended to the bottom of Weapon Setting.
     local supplyStack = {
       {
         Key = "ModMenu_AirDrop_Ex", UI = AliasMap.TitleSwitcher, Text = "AirDrop",
@@ -3736,7 +3737,7 @@ function Menu.Wire()
       {
         Key = "ModMenu_AirDrop_Distance", UI = AliasMap.Slider, Text = "   AirDrop Distance (1-1000m)",
         ExpandHandle = "ModMenu_AirDrop_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
-        GetFunc = function() return A.Config.AirDropDistance or 300 end,
+        GetFunc = function() return A.Config.AirDropDistance or 1000 end,
         SetFunc = function(c, v) A.Config.AirDropDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
       },
       {
@@ -3748,10 +3749,14 @@ function Menu.Wire()
       {
         Key = "ModMenu_LootCrate_Distance", UI = AliasMap.Slider, Text = "   Loot Crate Distance (1-1000m)",
         ExpandHandle = "ModMenu_LootCrate_Ex", MinValue = 1, MaxValue = 1000, min = 1, max = 1000,
-        GetFunc = function() return A.Config.LootCrateDistance or 300 end,
+        GetFunc = function() return A.Config.LootCrateDistance or 1000 end,
         SetFunc = function(c, v) A.Config.LootCrateDistance = math.max(1, math.min(1000, math.floor(v + 0.5))); return true end
       }
     }
+
+    for _, setting in ipairs(supplyStack) do
+      weaponStack[#weaponStack + 1] = setting
+    end
 
     local T = function(_, english) return english end
         local StackAimbotV2 = {
@@ -3821,8 +3826,7 @@ function Menu.Wire()
       Key = "ModMenu", Text = 999000, UIKey = "Setting_Page_Privacy",
       Category = {
         { Key = "Cat_ESP", Text = 999001, Stack = stack },
-        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack },
-        { Key = "Cat_SupplyItems", Text = "AirDrop / Loot Crate", Stack = supplyStack }
+        { Key = "Cat_Weapons", Text = "Weapon Setting", Stack = weaponStack }
       }
     }
     for i = #catalog, 1, -1 do
