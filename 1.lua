@@ -1,15 +1,14 @@
--- Skin, wardrobe, kill-message, deadbox, kill-counter, and emote module.
+-- Skin, wardrobe, kill-message, deadbox, and kill-counter module.
 -- Extracted from the supplied BRPlayerCharacterBase.lua; unrelated combat/ESP features removed.
 
 _G.LexusConfig = _G.LexusConfig or {}
 _G.LexusConfig.ModSkin = true
-_G.LexusConfig.ModEmote = false
 _G.LexusConfig.SkinDeadBox = false
 _G.LexusConfig.SkinAttachment = false
 _G.LexusConfig.KillMessage = false
 _G.LexusConfig.KillCountUI = false
 
---[[ AddOutfit v7.5 — Tích hợp hệ thống chọn Skin qua tủ đồ (Wardrobe) ]]
+-- [[ AddOutfit v7.5 - Integrates the skin selection system through the wardrobe ]]
 local F = {}
 local DEBUG = false  
 function F.log(...)
@@ -29,319 +28,319 @@ local MATCH_CONFIG = {
     weaponSkins = {},
 }
 
--- Bảng ID các siêu xe (Thêm tự do nếu có ID mới)
+-- Supercar ID list (add new IDs here when available)
 local ITEMS = {
     -- ==============================================================================
-    -- HỆ THỐNG GỐC CỦA V7.5 (KHÔNG ĐƯỢC XÓA DÒNG NÀY)
+    -- ORIGINAL V7.5 SYSTEM (DO NOT DELETE THIS LINE)
     -- ==============================================================================
     703029, 703044, 703046, 703048, 1400010, 1400062, 1400070, 1400083, 1400100, 1400106, 1400112, 1400117, 1400134, 1407917, 1400170, 
     1400172, 1400173, 1400174, 1400175, 1400177, 1400179, 1400180, 1400228, 1400231, 1400233, 1400236, 1400237, 1400238, 1400242, 1400244,
     202408070, 202408071, 202408072, 202408073, 202408074, 202408075,
     1407905, 1407906, 1407907, 1407908, 1407909, 1407910, 1407911, 1407912, 1407913, 1407914, 1407915, 1407916, 1410585,
     -- ==============================================================================
-    -- 1. SÚNG NÂNG CẤP (CHỈ LẤY CẤP ĐỘ CAO NHẤT CỦA TỪNG KHẨU SÚNG)
+    -- 1. UPGRADED WEAPONS (KEEP ONLY THE HIGHEST LEVEL FOR EACH WEAPON)
     -- ==============================================================================
     -- [ M416 ]
-    1101004163, -- Hoàng Gia Lộng Lẫy - M416 (Cấp 8)
-    1101004201, -- Bạch Lân Nhả Ngọc - M416 (Cấp 8)
-    1101004209, -- Thủy Triều Dậy Sóng - M416 (Cấp 8)
-    1101004218, -- Ma Ảnh - M416 (Cấp 8)
-    1101004226, -- Phong Ấn U Minh - M416 (Cấp 8)
-    1101004236, -- Lam Sư Đoạt Mệnh - M416 (Cấp 8)
-    1101004246, -- Hỏa Liên - M416 (Cấp 8)
-    1101004046, -- Băng giá - M416 (Cấp 7)
-    1101004062, -- Chú hề - M416 (Cấp 7)
-    1101004078, -- Kẻ lang thang - M416 (Cấp 7)
-    1101004086, -- Bò Sát Gầm Gừ - M416 (Cấp 7)
-    1101004098, -- Tiếng Gọi Hoang Dã - M416 (Cấp 7)
-    1101004138, -- Lõi Công Nghệ - M416 (Cấp 7)
+    1101004163, -- M416 skin (Level 8)
+    1101004201, -- M416 skin (Level 8)
+    1101004209, -- M416 skin (Level 8)
+    1101004218, -- M416 skin (Level 8)
+    1101004226, -- M416 skin (Level 8)
+    1101004236, -- M416 skin (Level 8)
+    1101004246, -- M416 skin (Level 8)
+    1101004046, -- M416 skin (Level 7)
+    1101004062, -- M416 skin (Level 7)
+    1101004078, -- M416 skin (Level 7)
+    1101004086, -- M416 skin (Level 7)
+    1101004098, -- M416 skin (Level 7)
+    1101004138, -- M416 skin (Level 7)
 
     -- [ AKM ]
-    1101001174, -- Bạo Chúa Bộ Lạc - AKM (Cấp 8)
-    1101001213, -- Đô Đốc Hải Long Tinh - AKM (Cấp 8)
-    1101001242, -- Ngày Phán Quyết - AKM (Cấp 8)
-    1101001265, -- Thời Quang Khả Biến - AKM (Cấp 8)
-    1101001276, -- Huyễn Thần - AKM (Cấp 8)
-    1101001063, -- Huyền thoại Seven Seas - AKM (Cấp 7)
-    1101001089, -- Băng giá - AKM (Cấp 7)
-    1101001103, -- Hóa Thạch - AKM (Cấp 7)
-    1101001116, -- Bí Ngô Kinh Dị - AKM (Cấp 7)
-    1101001128, -- Long Vương - AKM (Cấp 7)
-    1101001143, -- Hải Tặc Vàng - AKM (Cấp 7)
-    1101001154, -- Người Giải Mã - AKM (Cấp 7)
-    1101001231, -- Thỏ Tinh Nghịch - AKM (Cấp 7)
-    1101001249, -- Thánh Quang (Trăng Thần) - AKM (Cấp 7)
-    1101001256, -- Thánh Quang (Lông Vũ Hoàng Kim) - AKM (Cấp 7)
-    1101001042, -- Ánh kim - AKM (Cấp 6)
-    1101001068, -- Hổ gầm gừ - AKM (Cấp 5)
+    1101001174, -- AKM skin (Level 8)
+    1101001213, -- AKM skin (Level 8)
+    1101001242, -- AKM skin (Level 8)
+    1101001265, -- AKM skin (Level 8)
+    1101001276, -- AKM skin (Level 8)
+    1101001063, -- AKM skin (Level 7)
+    1101001089, -- AKM skin (Level 7)
+    1101001103, -- AKM skin (Level 7)
+    1101001116, -- AKM skin (Level 7)
+    1101001128, -- AKM skin (Level 7)
+    1101001143, -- AKM skin (Level 7)
+    1101001154, -- AKM skin (Level 7)
+    1101001231, -- AKM skin (Level 7)
+    1101001249, -- AKM skin (Level 7)
+    1101001256, -- AKM skin (Level 7)
+    1101001042, -- AKM skin (Level 6)
+    1101001068, -- AKM skin (Level 5)
 
     -- [ SCAR-L ]
-    1101003146, -- Gai Tà Ác - SCAR-L (Cấp 8)
-    1101003167, -- Ma Vương Huyết Hồn - SCAR-L (Cấp 8)
-    1101003227, -- Thiên Điểu - SCAR-L (Cấp 8)
-    1101003057, -- Súng nước - SCAR-L (Cấp 7)
-    1101003070, -- Bí Ngô Ma Quái - SCAR-L (Cấp 7)
-    1101003080, -- Chiến Dịch Vì Ngày Mai - SCAR-L (Cấp 7)
-    1101003099, -- Drop Da Bass - SCAR-L (Cấp 7)
-    1101003119, -- Tinh thể Hextech SCAR-L (Cấp 7)
-    1101003188, -- Cái Ôm Của Chú Hề - SCAR-L (Cấp 7)
-    1101003195, -- Thánh Nữ Huyền Ảo - SCAR-L (Cấp 7)
-    1101003208, -- Vương Quốc Huyền Ảo - SCAR-L (Cấp 7)
-    1101003219, -- Kính Pha Lê - SCAR-L (Cấp 7)
-    1101003173, -- Ánh Sáng Hoàng Tộc - SCAR-L (Cấp 5)
-    1101003212, -- Mèo Ăn Vặt - SCAR-L (Cấp 3)
+    1101003146, -- SCAR-L skin (Level 8)
+    1101003167, -- SCAR-L skin (Level 8)
+    1101003227, -- SCAR-L skin (Level 8)
+    1101003057, -- SCAR-L skin (Level 7)
+    1101003070, -- SCAR-L skin (Level 7)
+    1101003080, -- SCAR-L skin (Level 7)
+    1101003099, -- SCAR-L skin (Level 7)
+    1101003119, -- SCAR-L skin (Level 7)
+    1101003188, -- SCAR-L skin (Level 7)
+    1101003195, -- SCAR-L skin (Level 7)
+    1101003208, -- SCAR-L skin (Level 7)
+    1101003219, -- SCAR-L skin (Level 7)
+    1101003173, -- SCAR-L skin (Level 5)
+    1101003212, -- SCAR-L skin (Level 3)
 
     -- [ M762 ]
-    1101008081, -- Vị Khách Nổi Loạn - M762 (Cấp 8)
-    1101008104, -- Lõi Sao Huyền Ảo - M762 (Cấp 8)
-    1101008146, -- Bạch Cốt U Minh - M762 (Cấp 8)
-    1101008154, -- Khung Xương - M762 (Cấp 8)
-    1101008051, -- Bản Nhạc Tình Yêu - M762 (Cấp 7)
-    1101008061, -- Phát Bắn Chí Mạng - M762 (Cấp 7)
-    1101008070, -- GACKT MOONSAGA - M762 (Cấp 7)
-    1101008116, -- Biểu Tượng Bóng Đá Messi - M762 (Cấp 7)
-    1101008126, -- Huyết Rồng - M762 (Cấp 7)
-    1101008136, -- Tiên Linh Lưu Ly - M762 (Cấp 7)
-    1101008163, -- Cổ Vật Hắc Ám - M762 (Cấp 7)
-    1101008026, -- Pony Bé Nhỏ - M762 (Cấp 5)
-    1101008036, -- Đóa Sen Phẫn Nộ - M762 (Cấp 5)
+    1101008081, -- M762 skin (Level 8)
+    1101008104, -- M762 skin (Level 8)
+    1101008146, -- M762 skin (Level 8)
+    1101008154, -- M762 skin (Level 8)
+    1101008051, -- M762 skin (Level 7)
+    1101008061, -- M762 skin (Level 7)
+    1101008070, -- M762 skin (Level 7)
+    1101008116, -- M762 skin (Level 7)
+    1101008126, -- M762 skin (Level 7)
+    1101008136, -- M762 skin (Level 7)
+    1101008163, -- M762 skin (Level 7)
+    1101008026, -- M762 skin (Level 5)
+    1101008036, -- M762 skin (Level 5)
 
     -- [ AUG ]
-    1101006062, -- Tinh Linh Băng Giá - AUG (Cấp 8)
-    1101006085, -- Hoa Hồng Ma Mị - AUG (Cấp 8)
-    1101006075, -- Hỏa Ca - AUG (Cấp 7)
-    1101006033, -- Gánh Xiếc Rong - AUG (Cấp 5)
-    1101006044, -- Evangelion Angel Thứ 4 - AUG (Cấp 5)
-    1101006067, -- Ác Mộng Biển Sâu - AUG (Cấp 5)
+    1101006062, -- AUG skin (Level 8)
+    1101006085, -- AUG skin (Level 8)
+    1101006075, -- AUG skin (Level 7)
+    1101006033, -- AUG skin (Level 5)
+    1101006044, -- AUG skin (Level 5)
+    1101006067, -- AUG skin (Level 5)
 
     -- [ GROZA ]
-    1101005038, -- Ryomen Sukuna - Groza (Cấp 7)
-    1101005052, -- Lửa U Minh - Groza (Cấp 7)
-    1101005098, -- Godzilla Bốc Lửa - Groza (Cấp 7)
-    1101005019, -- Kỵ Binh Rừng Sâu - GROZA (Cấp 5)
-    1101005025, -- Đêm Huyền Ảo - GROZA (Cấp 5)
-    1101005043, -- Trận Chiến Sắc Màu - Groza (Cấp 5)
-    1101005082, -- Lồng Đèn Bí Ngô - Groza (Cấp 5)
-    1101005090, -- Di Tích Thượng Cổ - Groza (Cấp 5)
-    1101005105, -- Singam Roar - Groza (Cấp 5)
+    1101005038, -- Groza skin (Level 7)
+    1101005052, -- Groza skin (Level 7)
+    1101005098, -- Groza skin (Level 7)
+    1101005019, -- GROZA skin (Level 5)
+    1101005025, -- GROZA skin (Level 5)
+    1101005043, -- Groza skin (Level 5)
+    1101005082, -- Groza skin (Level 5)
+    1101005090, -- Groza skin (Level 5)
+    1101005105, -- Groza skin (Level 5)
 
     -- [ QBZ & Mk47 & G36C & Honey Badger & FAMAS & ASM Abakan & ACE32 ]
-    1101007046, -- Công Chúa Hắc Ám - QBZ (Cấp 7)
-    1101007062, -- Hoa Kiếm Chí Mạng - QBZ (Cấp 7)
-    1101007071, -- Thiên Mệnh - QBZ (Cấp 7)
-    1101007025, -- Ánh Dương - QBZ (Cấp 5)
-    1101007036, -- Càn Quét - QBZ (Cấp 5)
-    1101007079, -- Băng Quyền - QBZ (Cấp 5)
-    1101009019, -- Thỏ Tinh Quái - Mk47 (Cấp 3)
-    1101010029, -- Xung Nhịp Sân Cỏ - G36C (Cấp 5)
-    1101012033, -- Cổ Mộc Chiến Khí - Honey Badger (Cấp 7)
-    1101012009, -- Sắc Màu Huyền Ảo - Honey Badger (Cấp 5)
-    1101012018, -- Thanh Âm Du Dương - Honey Badger (Cấp 5)
-    1101012024, -- Honey Badger Mikey (Cấp 5)
-    1101100012, -- Đế Vương Thần Vực - FAMAS (Cấp 8)
-    1101100018, -- Ảo Ảnh Điện Tử - FAMAS (Cấp 5)
-    1101101007, -- Uy Vũ Hắc Điểu - ASM Abakan (Cấp 7)
-    1101102025, -- Thủy Quái - ACE32 (Cấp 8)
-    1101102041, -- Tiên Tri Điềm Lành - ACE32 (Cấp 8)
-    1101102049, -- Thì Thầm Cánh Bướm - ACE32 (Cấp 8)
-    1101102007, -- Kamehameha - ACE32 (Cấp 7)
-    1101102017, -- Ngọc Bích - ACE32 (Cấp 7)
-    1101102032, -- Cáo Tinh Nghịch - ACE32 (Cấp 5)
+    1101007046, -- QBZ skin (Level 7)
+    1101007062, -- QBZ skin (Level 7)
+    1101007071, -- QBZ skin (Level 7)
+    1101007025, -- QBZ skin (Level 5)
+    1101007036, -- QBZ skin (Level 5)
+    1101007079, -- QBZ skin (Level 5)
+    1101009019, -- Mk47 skin (Level 3)
+    1101010029, -- G36C skin (Level 5)
+    1101012033, -- Honey Badger skin (Level 7)
+    1101012009, -- Honey Badger skin (Level 5)
+    1101012018, -- Honey Badger skin (Level 5)
+    1101012024, -- Honey Badger skin (Level 5)
+    1101100012, -- FAMAS skin (Level 8)
+    1101100018, -- FAMAS skin (Level 5)
+    1101101007, -- ASM Abakan skin (Level 7)
+    1101102025, -- ACE32 skin (Level 8)
+    1101102041, -- ACE32 skin (Level 8)
+    1101102049, -- ACE32 skin (Level 8)
+    1101102007, -- ACE32 skin (Level 7)
+    1101102017, -- ACE32 skin (Level 7)
+    1101102032, -- Outfit cosmetic (Level 5)
 
     -- [ SMG (UZI, UMP45, Vector, Thompson, Bizon, MP5K, P90) ]
-    1102001120, -- Băng Giá - UZI (Cấp 8)
-    1102001130, -- Xiềng Xích Hỏa Ngục - UZI (Cấp 7)
-    1102001024, -- Savagery - UZI (Cấp 6)
-    1102001036, -- Vật Tổ Thần Bí - UZI (Cấp 5)
-    1102001058, -- Khoảnh Khắc Bất Ngờ - UZI (Cấp 5)
-    1102001069, -- UZI Quang Hóa (Cấp 5)
-    1102001089, -- Ma Pháp - UZI (Cấp 5)
-    1102001103, -- Cam Tươi Mát - UZI (Cấp 5)
-    1102001102, -- Máy Ép Trái Cây - UZI (Cấp 5)
-    1102002438, -- Song Tử Chiến - UMP45 (Cấp 8)
-    1102002446, -- Song Tử Đỏ Thẫm - UMP45 (Cấp 8)
-    1102002043, -- Hỏa long - UMP45 (Cấp 7)
-    1102002061, -- Ảo Mộng Chết Chóc - UMP45 (Cấp 7)
-    1102002136, -- Băng Giá - UMP45 (Cấp 7)
-    1102002424, -- Thần Khí Anukhra - UMP45 (Cấp 7)
-    1102002053, -- EMP - UMP45 (Cấp 5)
-    1102002070, -- Đồ Tể Bạch Kim - UMP45 (Cấp 5)
-    1102002090, -- Cuộc Chiến 8-Bit - UMP45 (Cấp 5)
-    1102002112, -- Ngày Giáng Sinh - UMP45 (Cấp 5)
-    1102002117, -- Ong Bắp Cày - UMP45 (Cấp 5)
-    1102002129, -- Con Sóng Lễ Hội - UMP45 (Cấp 5)
-    1102002143, -- PUBGM X NewJeans - UMP45 (Cấp 5)
-    1102003080, -- Cánh Rồng - Vector (Cấp 7)
-    1102003100, -- Tuyết Diệt Ảnh - Vector (Cấp 7)
-    1102003020, -- Nanh Dơi Huyết Tộc - Vector (Cấp 5)
-    1102003031, -- Hoa Hồng Đêm - Vector (Cấp 5)
-    1102003039, -- Gấu Tinh Nghịch - Vector (Cấp 5)
-    1102003052, -- Bá Tước Vàng - Vector (Cấp 5)
-    1102003065, -- Lưỡi Liềm Vàng - Vector (Cấp 5)
-    1102003072, -- Sát Thủ Tối Thượng - Vector (Cấp 5)
-    1102003090, -- KMF Lancelot - Vector (Cấp 5)
-    1102004018, -- Kẹo ngọt - Thompson (Cấp 5)
-    1102004034, -- Máy Chạy Hơi Nước - Thompson (Cấp 5)
-    1102004048, -- Tử Đằng - Thompson SMG (Cấp 3)
-    1102005064, -- Quang Ảo Điện Tử - PP-19 Bizon (Cấp 7)
-    1102005007, -- Tắc Kè - PP-19 Bizon (Cấp 5)
-    1102005020, -- Skullcrusher - PP-19 Bizon (Cấp 5)
-    1102005041, -- Thần Binh Võ Thuật - PP-19 Bizon (Cấp 5)
-    1102005052, -- DP Quantum Quake - Bizon (Cấp 5)
-    1102005057, -- Lân Sư - PP-19 Bizon (Cấp 5)
-    1102005072, -- Huyết Tế - PP-19 Bizon (Cấp 5)
-    1102005078, -- SAKAMOTO SHOP - PP-19 (Cấp 5)
-    1102007019, -- PUBGM X QWER - MP5K (Cấp 5)
-    1102007022, -- Pixel Cổ Điển - MP5K (Cấp 3)
-    1102105012, -- Miêu Nữ Công Nghệ - P90 (Cấp 7)
-    1102105028, -- Thiên Mã - P90 (Cấp 7)
-    1102105018, -- Móng Vuốt Hoàng Kim - P90 (Cấp 5)
+    1102001120, -- UZI skin (Level 8)
+    1102001130, -- UZI skin (Level 7)
+    1102001024, -- UZI skin (Level 6)
+    1102001036, -- UZI skin (Level 5)
+    1102001058, -- UZI skin (Level 5)
+    1102001069, -- UZI skin (Level 5)
+    1102001089, -- UZI skin (Level 5)
+    1102001103, -- UZI skin (Level 5)
+    1102001102, -- UZI skin (Level 5)
+    1102002438, -- UMP45 skin (Level 8)
+    1102002446, -- UMP45 skin (Level 8)
+    1102002043, -- UMP45 skin (Level 7)
+    1102002061, -- UMP45 skin (Level 7)
+    1102002136, -- UMP45 skin (Level 7)
+    1102002424, -- UMP45 skin (Level 7)
+    1102002053, -- UMP45 skin (Level 5)
+    1102002070, -- UMP45 skin (Level 5)
+    1102002090, -- UMP45 skin (Level 5)
+    1102002112, -- UMP45 skin (Level 5)
+    1102002117, -- UMP45 skin (Level 5)
+    1102002129, -- UMP45 skin (Level 5)
+    1102002143, -- UMP45 skin (Level 5)
+    1102003080, -- Vector skin (Level 7)
+    1102003100, -- Vector skin (Level 7)
+    1102003020, -- Vector skin (Level 5)
+    1102003031, -- Vector skin (Level 5)
+    1102003039, -- Vector skin (Level 5)
+    1102003052, -- Vector skin (Level 5)
+    1102003065, -- Vector skin (Level 5)
+    1102003072, -- Vector skin (Level 5)
+    1102003090, -- Vector skin (Level 5)
+    1102004018, -- Thompson skin (Level 5)
+    1102004034, -- Thompson skin (Level 5)
+    1102004048, -- Thompson skin (Level 3)
+    1102005064, -- PP-19 Bizon skin (Level 7)
+    1102005007, -- PP-19 Bizon skin (Level 5)
+    1102005020, -- PP-19 Bizon skin (Level 5)
+    1102005041, -- PP-19 Bizon skin (Level 5)
+    1102005052, -- Bizon skin (Level 5)
+    1102005057, -- PP-19 Bizon skin (Level 5)
+    1102005072, -- PP-19 Bizon skin (Level 5)
+    1102005078, -- Cosmetic item (Level 5)
+    1102007019, -- MP5K skin (Level 5)
+    1102007022, -- Vehicle cosmetic (Level 3)
+    1102105012, -- P90 skin (Level 7)
+    1102105028, -- P90 skin (Level 7)
+    1102105018, -- P90 skin (Level 5)
 
     -- [ SNIPER & MARKSMAN RIFLE (Kar98, M24, AWM, SKS, SLR, Mk14, etc.) ]
-    1103001202, -- Băng Yêu - Kar98K (Cấp 8)
-    1103001060, -- Dấu nanh Phẫn nộ - Kar98K (Cấp 7)
-    1103001079, -- Kukulkan Cuồng Nộ - Kar98K (Cấp 7)
-    1103001101, -- Ánh Trăng - Kar98K (Cấp 7)
-    1103001129, -- Gackt Moon - Kar98K (Cấp 7)
-    1103001146, -- Cá Mập Titan - Kar98K (Cấp 7)
-    1103001154, -- Mật Mã Chết Chóc - Kar98K (Cấp 7)
-    1103001179, -- Điện Cực Tím - Kar98K (Cấp 7)
-    1103001191, -- Hồng Hỏa Diệm - Kar98K (Cấp 7)
-    1103001085, -- Đêm Nhạc Rock - Kar98K (Cấp 5)
-    1103001160, -- Thợ Săn Tinh Vân - Kar98K (Cấp 5)
-    1103001183, -- Nhịp Điệu Mèo Con - Kar98K (Cấp 3)
-    1103002030, -- Quyền Trượng Pharaoh - M24 (Cấp 7)
-    1103002059, -- Tuần Hoàn Sự Sống - M24 (Cấp 7)
-    1103002087, -- Nhịp Điệu Hoàn Mỹ - M24 (Cấp 7)
-    1103002106, -- Minh Nguyệt Cấm Vực - M24 (Cấp 7)
-    1103002156, -- Bình Minh Bóng Tối - M24 (Cấp 7)
-    1103002049, -- Hồ Điệp Phu Nhân - M24 (Cấp 5)
-    1103002047, -- Giai Điệu Chí Mạng - M24 (Cấp 5)
-    1103002094, -- Công Nghệ Cao - M24 (Cấp 5)
-    1103003022, -- Neon - AWM (Cấp 7)
-    1103003030, -- Chỉ Huy Chiến Trường - AWM (Cấp 7)
-    1103003042, -- Godzilla - AWM (Cấp 7)
-    1103003051, -- Đại Long Cầu Vồng - AWM (Cấp 7)
-    1103003062, -- Hỏa Phượng Hoàng - AWM (Cấp 7)
-    1103003079, -- Huyết Hải Thiên Long - AWM (Cấp 7)
-    1103003087, -- Thanh Hoa Xà - AWM (Cấp 7)
-    1103003099, -- Hắc Khí - AWM (Cấp 7)
-    1103003092, -- Hồng Hoang - AWM (Cấp 5)
-    1103004037, -- Quý Bà Đỏ - SKS (Cấp 7)
-    1103004046, -- Rừng Thép - SKS (Cấp 5)
-    1103004058, -- Năng Lượng Băng Tuyết - SKS (Cấp 5)
-    1103004080, -- Khiết Hoa Nở Rộ - SKS (Cấp 5)
-    1103004087, -- Giai Điệu Tử Thần - SKS (Cấp 5)
-    1103005024, -- Quạ Đen - VSS (Cấp 5)
-    1103005048, -- Trinh Sát Tuyết Trắng - VSS (Cấp 3)
-    1103009022, -- Mùa Hoa Đào - SLR (Cấp 5)
-    1103009037, -- Ngọn Lửa Ma Thuật - SLR (Cấp 5)
-    1103009051, -- Ma Mộng - SLR (Cấp 5)
-    1103009042, -- Thanh Âm Hải Huyền - SLR (Cấp 3)
-    1103006030, -- Sông Băng - Mini14 (Cấp 7)
-    1103006046, -- Nét Đẹp Thuần Khiết - Mini14 (Cấp 5)
-    1103006058, -- Mèo Chiêu Tài - Mini14 (Cấp 5)
-    1103006063, -- Tay Đua Gan Dạ - Mini14 (Cấp 5)
-    1103006075, -- Nhịp Chiến Nhanh - Mini14 (Cấp 5)
-    1103007028, -- Vương Quốc Rồng - Mk14 (Cấp 8)
-    1103007020, -- Sức Mạnh Ngân Hà - Mk14 (Cấp 5)
-    1103007038, -- Rồng Sữa Mềm Mại - Mk14 (Cấp 5)
-    1103007043, -- Hộp Quà May Mắn - Mk14 (Cấp 5)
-    1103012010, -- Khủng Long Ephialtes - AMR (Cấp 8)
-    1103012019, -- Hỏa Thần - AMR (Cấp 7)
-    1103012031, -- Vô Âm Ly Biệt - AMR (Cấp 7)
-    1103012039, -- Đại Chiến Huyễn Sắc - AMR (Cấp 7)
-    1103012024, -- Tinh Thể Onyx - AMR (Cấp 5)
-    1103100007, -- Thú Săn Mồi - Mk12 (Cấp 5)
-    1103102007, -- Chiến Hạm Vũ Trụ - DSR (Cấp 7)
-    1103103007, -- Vinh Quang Chiến Binh - M1 Garand (Cấp 7)
+    1103001202, -- Kar98K skin (Level 8)
+    1103001060, -- Kar98K skin (Level 7)
+    1103001079, -- Kar98K skin (Level 7)
+    1103001101, -- Kar98K skin (Level 7)
+    1103001129, -- Kar98K skin (Level 7)
+    1103001146, -- Kar98K skin (Level 7)
+    1103001154, -- Kar98K skin (Level 7)
+    1103001179, -- Kar98K skin (Level 7)
+    1103001191, -- Kar98K skin (Level 7)
+    1103001085, -- Kar98K skin (Level 5)
+    1103001160, -- Kar98K skin (Level 5)
+    1103001183, -- Kar98K skin (Level 3)
+    1103002030, -- M24 skin (Level 7)
+    1103002059, -- M24 skin (Level 7)
+    1103002087, -- M24 skin (Level 7)
+    1103002106, -- M24 skin (Level 7)
+    1103002156, -- M24 skin (Level 7)
+    1103002049, -- M24 skin (Level 5)
+    1103002047, -- M24 skin (Level 5)
+    1103002094, -- M24 skin (Level 5)
+    1103003022, -- AWM skin (Level 7)
+    1103003030, -- AWM skin (Level 7)
+    1103003042, -- AWM skin (Level 7)
+    1103003051, -- AWM skin (Level 7)
+    1103003062, -- AWM skin (Level 7)
+    1103003079, -- AWM skin (Level 7)
+    1103003087, -- AWM skin (Level 7)
+    1103003099, -- AWM skin (Level 7)
+    1103003092, -- AWM skin (Level 5)
+    1103004037, -- SKS skin (Level 7)
+    1103004046, -- SKS skin (Level 5)
+    1103004058, -- SKS skin (Level 5)
+    1103004080, -- SKS skin (Level 5)
+    1103004087, -- SKS skin (Level 5)
+    1103005024, -- VSS skin (Level 5)
+    1103005048, -- VSS skin (Level 3)
+    1103009022, -- SLR skin (Level 5)
+    1103009037, -- SLR skin (Level 5)
+    1103009051, -- SLR skin (Level 5)
+    1103009042, -- SLR skin (Level 3)
+    1103006030, -- Mini14 skin (Level 7)
+    1103006046, -- Mini14 skin (Level 5)
+    1103006058, -- Mini14 skin (Level 5)
+    1103006063, -- Mini14 skin (Level 5)
+    1103006075, -- Mini14 skin (Level 5)
+    1103007028, -- Mk14 skin (Level 8)
+    1103007020, -- Mk14 skin (Level 5)
+    1103007038, -- Mk14 skin (Level 5)
+    1103007043, -- Mk14 skin (Level 5)
+    1103012010, -- Cosmetic item (Level 8)
+    1103012019, -- Cosmetic item (Level 7)
+    1103012031, -- Cosmetic item (Level 7)
+    1103012039, -- Cosmetic item (Level 7)
+    1103012024, -- Cosmetic item (Level 5)
+    1103100007, -- Cosmetic item (Level 5)
+    1103102007, -- Cosmetic item (Level 7)
+    1103103007, -- Cosmetic item (Level 7)
 
     -- [ SHOTGUN & MACHINE GUN (S12K, DBS, M249, DP-28, MG3...) ]
-    1104001035, -- Độc Hồn - S686 (Cấp 5)
-    1104002022, -- Chạng Vạng - S1897 (Cấp 5)
-    1104002049, -- Xung Kích Sắc Màu - S1897 (Cấp 3)
-    1104003026, -- S12K GACKT (Cấp 7)
-    1104003037, -- Kích Hoạt Nguyên Tử - S12K (Cấp 5)
-    1104003046, -- Trái Tim Cyber - S12K (Cấp 5)
-    1104004035, -- Chiến Giáp Quái Thú - DBS (Cấp 5)
-    1104004041, -- Sandsinger - DBS (Cấp 5)
-    1104004051, -- Okarun - DBS (Cấp 5)
-    1104004024, -- Báo Sắc Màu - DBS (Cấp 3)
-    1104102004, -- Tàn Tích Hoàng Kim - NS2000 (Cấp 3)
-    1105001034, -- Pháo Giáng Sinh - M249 (Cấp 7)
-    1105001048, -- Nữ Đế Ánh Sáng - M249 (Cấp 7)
-    1105001069, -- Vương Quyền Hắc Ám - M249 (Cấp 7)
-    1105001020, -- Nữ Hoàng Băng Giá M249 V (Cấp 5)
-    1105001054, -- Stargaze Fury - M249 (Cấp 5)
-    1105001062, -- Graffiti Đường Phố - M249 (Cấp 5)
-    1105001075, -- Cá Mập Thép - M249 (Cấp 4)
-    1105002091, -- Huyết Họa - DP28 (Cấp 8)
-    1105002018, -- Sát Thủ Bí Ẩn - DP-28 (Cấp 5)
-    1105002035, -- Ngọc Long - DP-28 (Cấp 5)
-    1105002058, -- Chiến Binh Hàng Hải - DP28 (Cấp 5)
-    1105002063, -- Rồng Thần Shenron - DP-28 (Cấp 5)
-    1105002071, -- Chiến Sĩ Thần Giáp - DP-28 (Cấp 5)
-    1105002076, -- Mèo Số Hóa - DP-28 (Cấp 5)
-    1105002083, -- DP-28 Frieren's Staff (Cấp 5)
-    1105002096, -- Hồ Tộc - DP-28 (Cấp 3)
-    1105010019, -- Chiến Thần Bầu Trời - MG3 (Cấp 7)
-    1105010008, -- Thiên Khung - MG3 (Cấp 5)
-    1105010026, -- Mina Ashiro - MG3 (Cấp 5)
+    1104001035, -- Cosmetic item (Level 5)
+    1104002022, -- Cosmetic item (Level 5)
+    1104002049, -- Cosmetic item (Level 3)
+    1104003026, -- Cosmetic item (Level 7)
+    1104003037, -- Cosmetic item (Level 5)
+    1104003046, -- Cosmetic item (Level 5)
+    1104004035, -- Cosmetic item (Level 5)
+    1104004041, -- Cosmetic item (Level 5)
+    1104004051, -- Cosmetic item (Level 5)
+    1104004024, -- Outfit cosmetic (Level 3)
+    1104102004, -- Cosmetic item (Level 3)
+    1105001034, -- Outfit cosmetic (Level 7)
+    1105001048, -- M249 skin (Level 7)
+    1105001069, -- M249 skin (Level 7)
+    1105001020, -- M249 skin (Level 5)
+    1105001054, -- M249 skin (Level 5)
+    1105001062, -- M249 skin (Level 5)
+    1105001075, -- M249 skin (Level 4)
+    1105002091, -- Cosmetic item (Level 8)
+    1105002018, -- DP-28 skin (Level 5)
+    1105002035, -- DP-28 skin (Level 5)
+    1105002058, -- Cosmetic item (Level 5)
+    1105002063, -- DP-28 skin (Level 5)
+    1105002071, -- DP-28 skin (Level 5)
+    1105002076, -- DP-28 skin (Level 5)
+    1105002083, -- DP-28 skin (Level 5)
+    1105002096, -- DP-28 skin (Level 3)
+    1105010019, -- MG3 skin (Level 7)
+    1105010008, -- MG3 skin (Level 5)
+    1105010026, -- MG3 skin (Level 5)
 
-    -- [ CẬN CHIẾN & VŨ KHÍ KHÁC (Skorpion, Nỏ, Chảo, Dao...) ]
-    1106008013, -- Mật Mã Vàng - Skorpion (Cấp 5)
-    1106008022, -- Bí Ẩn Tinh Tú - Skorpion (Cấp 3)
-    1106011008, -- Rồng Rắn Lên Mây - MP7 Kép (Cấp 5)
-    1106011003, -- Thợ Săn Kẹo - MP7 (Cấp 3)
-    1107001018, -- Chúa Hề Thịnh Nộ - Nỏ (Cấp 3)
-    1107098003, -- Rung Chấn Công Nghệ - MGL (Cấp 3)
-    1108001057, -- Săn Rồng - Dao (Cấp 3)
-    1108001064, -- Đoản Kiếm Yor SPY×FAMILY (Cấp 3)
-    1108001069, -- Ki Sword (Cấp 3)
-    1108001081, -- Rìu Godzilla Bốc Lửa (Cấp 3)
-    1108001085, -- Kiếm Trung Đoàn Trinh Sát Cấp 3
-    1108001098, -- Thương Đảo Ngược Thiên Đường - Dao (Cấp 3)
-    1108001104, -- Xích Tay - Dao (Cấp 3)
-    1108002059, -- Đinh Ba Thủy Triều Thịnh Nộ (Cấp 5)
-    1108004125, -- Hũ Mật Ong - Chảo (Cấp 5)
-    1108004160, -- Cá Sấu - Chảo (Cấp 5)
-    1108004145, -- Đêm Nhạc Rock - Chảo (Cấp 5)
-    1108004283, -- Vinh Quang - Chảo (Cấp 6)
-    1108004337, -- Chảo Điện Nguyên Tử (Cấp 6)
-    1108004356, -- Gà Rán - Chảo (Cấp 3)
-    1108004365, -- Yokai Huyền Bí - Chảo (Cấp 3)
-    1108004377, -- Chảo Cánh Cụt Vui Vẻ (Cấp 5)
-    1108004416, -- Quạt Vũ Điệu Nóng Bỏng - Chảo (Cấp 3)
-    1108005050, -- Rồng Băng Giá - Dao Găm (Cấp 3)
+    -- [ MELEE AND OTHER WEAPONS (Skorpion, Crossbow, Pan, Knife...) ]
+    1106008013, -- Skorpion skin (Level 5)
+    1106008022, -- Skorpion skin (Level 3)
+    1106011008, -- Cosmetic item (Level 5)
+    1106011003, -- Cosmetic item (Level 3)
+    1107001018, -- Cosmetic item (Level 3)
+    1107098003, -- Cosmetic item (Level 3)
+    1108001057, -- Cosmetic item (Level 3)
+    1108001064, -- Cosmetic item (Level 3)
+    1108001069, -- Cosmetic item (Level 3)
+    1108001081, -- Cosmetic item (Level 3)
+    1108001085, -- Cosmetic item (Level 3)
+    1108001098, -- Cosmetic item (Level 3)
+    1108001104, -- Cosmetic item (Level 3)
+    1108002059, -- Cosmetic item (Level 5)
+    1108004125, -- Cosmetic item (Level 5)
+    1108004160, -- Cosmetic item (Level 5)
+    1108004145, -- Cosmetic item (Level 5)
+    1108004283, -- Cosmetic item (Level 6)
+    1108004337, -- Cosmetic item (Level 6)
+    1108004356, -- Cosmetic item (Level 3)
+    1108004365, -- Cosmetic item (Level 3)
+    1108004377, -- Cosmetic item (Level 5)
+    1108004416, -- Cosmetic item (Level 3)
+    1108005050, -- Cosmetic item (Level 3)
 
     -- ==============================================================================
-    -- 2. FULL SIÊU XE (VIP VEHICLES)
+    -- 2. FULL SUPERCARS (VIP VEHICLES)
     -- ==============================================================================
     -- [ McLaren ]
-    1961007, -- McLaren 570S (Đen)
-    1961010, -- McLaren 570S (Trắng)
-    1961012, -- McLaren 570S (Hồng)
-    1961013, -- McLaren 570S (Vàng Trắng)
-    1961014, -- McLaren 570S (Vàng Đen)
-    1961015, -- McLaren 570S (Ánh Kim)
-    1961147, -- McLaren P1 (Trời Sao)
-    1961148, -- McLaren P1 (Hồng Rực Rỡ)
-    1961149, -- McLaren P1 (Vàng Núi Lửa)
-    1907054, -- Xe Đua Đội McLaren F1 (Điện Tử)
-    1907058, -- Xe Đua Đội McLaren F1
-    1907059, -- Xe Đua Đội McLaren F1 (Chiến Thắng)
+    1961007, -- Cosmetic item
+    1961010, -- Cosmetic item
+    1961012, -- Cosmetic item
+    1961013, -- Cosmetic item
+    1961014, -- Cosmetic item
+    1961015, -- Cosmetic item
+    1961147, -- Cosmetic item
+    1961148, -- Cosmetic item
+    1961149, -- Cosmetic item
+    1907054, -- Vehicle cosmetic
+    1907058, -- Vehicle cosmetic
+    1907059, -- Vehicle cosmetic
 
     -- [ Koenigsegg ]
-    1961016, -- Koenigsegg Jesko (Xám Bạc)
-    1961017, -- Koenigsegg Jesko (Cầu Vồng)
-    1961018, -- Koenigsegg Jesko (Bình Minh)
+    1961016, -- Cosmetic item
+    1961017, -- Cosmetic item
+    1961018, -- Cosmetic item
     1961029, -- Koenigsegg One:1 Gilt
     1961030, -- Koenigsegg One:1 Cyber Nebula
     1961031, -- Koenigsegg One:1 Jade
     1961032, -- Koenigsegg One:1 Phoenix
-    1903074, -- Koenigsegg Gemera (Xám Bạc)
-    1903075, -- Koenigsegg Gemera (Cầu Vồng)
-    1903076, -- Koenigsegg Gemera (Bình Minh)
+    1903074, -- Cosmetic item
+    1903075, -- Cosmetic item
+    1903076, -- Cosmetic item
 
     -- [ Lamborghini ]
     1961020, -- Lamborghini Aventador SVJ Verde Alceo
@@ -356,16 +355,16 @@ local ITEMS = {
     1908067, -- Lamborghini Urus Giallo Inti
 
     -- [ Bugatti ]
-    1961041, -- Bugatti Veyron 16.4 (Sắc Màu)
-    1961042, -- Bugatti Veyron 16.4 (Vàng)
+    1961041, -- Cosmetic item
+    1961042, -- Cosmetic item
     1961043, -- Bugatti Veyron 16.4
     1961044, -- Bugatti La Voiture Noire
-    1961045, -- Bugatti La Voiture Noire (Hợp Kim)
-    1961046, -- Bugatti La Voiture Noire (Chiến Binh)
-    1961047, -- Bugatti La Voiture Noire (Tinh Vân)
-    1961151, -- Bugatti Bolide (Lưỡi Gương)
-    1961152, -- Bugatti Bolide (Bỉ Ngạn)
-    1961153, -- Bugatti Bolide (Ảo Ảnh Hồ Băng)
+    1961045, -- Cosmetic item
+    1961046, -- Cosmetic item
+    1961047, -- Cosmetic item
+    1961151, -- Cosmetic item
+    1961152, -- Cosmetic item
+    1961153, -- Cosmetic item
 
     -- [ Aston Martin ]
     1961048, -- Aston Martin Valkyrie (Luminous Diamond)
@@ -386,15 +385,15 @@ local ITEMS = {
     1961057, -- Pagani Imola (Arctic Aegis)
 
     -- [ Bentley ]
-    1961137, -- Bentley Batur (Kim Cương Lấp Lánh)
-    1961138, -- Bentley Batur (Tận Cùng Thời Gian)
-    1961139, -- Bentley Betayga Azure (Vương Quốc Huyền Ảo)
-    1903200, -- Bentley Flying Spur Mulliner (Tinh Vân Xanh)
-    1903201, -- Bentley Flying Spur Mulliner (Dòng Chảy Vịnh Hẹp)
-    1908094, -- Bentley Betayga Azure (Mưa Hoa)
-    1908095, -- Bentley Betayga Azure (Đêm Yên Tĩnh)
-    1915008, -- Bentley Continental GTC Mulliner (Mộng Cảnh Lung Linh)
-    1915009, -- Bentley Continental GTC Mulliner (Quý Tộc Áo Tím)
+    1961137, -- Cosmetic item
+    1961138, -- Cosmetic item
+    1961139, -- Cosmetic item
+    1903200, -- Cosmetic item
+    1903201, -- Cosmetic item
+    1908094, -- Cosmetic item
+    1908095, -- Cosmetic item
+    1915008, -- Cosmetic item
+    1915009, -- Outfit cosmetic
 
     -- [ Maserati ]
     1961038, -- Maserati MC20 Bianco Audace
@@ -423,47 +422,47 @@ local ITEMS = {
     1908189, -- Dodge Hornet - Sunburst
 
     -- [ Porsche ]
-    1961062, -- Porsche 918 Spyder (Dòng Nước)
-    1961063, -- Porsche 918 Spyder (964 Bạc Ánh Kim)
-    1961064, -- Porsche 918 Spyder (Hồng)
-    1903218, -- Porsche Panamera Turbo S (Lam Ngọc)
+    1961062, -- Cosmetic item
+    1961063, -- Cosmetic item
+    1961064, -- Cosmetic item
+    1903218, -- Cosmetic item
     1903219, -- Porsche Panamera Turbo S (Xanh Viper)
-    1908108, -- Porsche Cayenne Turbo GT (Đường Đua Rực Lửa)
+    1908108, -- Cosmetic item
     1908109, -- Porsche Cayenne Turbo GT (Cam Dung Nham)
-    1915021, -- Porsche 911 Carrera 4 GTS Cabriolet (Ngàn Sao)
-    1915022, -- Porsche 911 Carrera 4 GTS Cabriolet (Đỏ Ruby)
+    1915021, -- Cosmetic item
+    1915022, -- Cosmetic item
 
     -- [ Shelby / Ford ]
-    1961058, -- Shelby 427 Cobra (Xanh & Trắng)
-    1961059, -- Shelby 427 Cobra (Graffiti Phục Cổ)
-    1903210, -- Shelby GT500 (Đen & Đỏ)
-    1903211, -- Shelby GT500 (Người Ngoài Hành Tinh Cyber)
-    1961068, -- Ford Mustang GTD (Huyền Thoại Xanh Tươi)
-    1961069, -- Ford Mustang GTD (Tinh Thần Nước Mỹ)
+    1961058, -- Cosmetic item
+    1961059, -- Cosmetic item
+    1903210, -- Cosmetic item
+    1903211, -- Cosmetic item
+    1961068, -- Cosmetic item
+    1961069, -- Cosmetic item
 
     -- [ Lotus ]
-    1961060, -- Lotus Emira (Rừng Sâu Thẫm)
-    1961061, -- Lotus Emira (Lướt Sắc Xanh)
+    1961060, -- Cosmetic item
+    1961061, -- Cosmetic item
 
     -- [ Apollo ]
-    1961065, -- Apollo EVO (Vàng Rực Rỡ)
-    1961066, -- Apollo EVO (Hoàng Hôn)
-    1961067, -- Apollo EVO (Băng Giá)
-    1903220, -- Apollo Intensa Emozione (Hỏa Ngục Nóng Chảy)
-    1903221, -- Apollo Intensa Emozione (Bóng Ma Tím)
-    1903222, -- Apollo Intensa Emozione (Quyết Đấu)
-    1903223, -- Apollo Intensa Emozione (Bão Tố)
+    1961065, -- Cosmetic item
+    1961066, -- Cosmetic item
+    1961067, -- Cosmetic item
+    1903220, -- Cosmetic item
+    1903221, -- Cosmetic item
+    1903222, -- Cosmetic item
+    1903223, -- Cosmetic item
 
     -- [ SSC Tuatara ]
-    1961140, -- Ảo Ảnh Hoa Hồng SSC Tuatara
-    1961141, -- Hạc Trời SSC Tuatara
-    1961142, -- Đao Bình Minh SSC Tuatara Striker
-    1961143, -- Màn Đêm Xanh SSC Tuatara Striker
+    1961140, -- Cosmetic item
+    1961141, -- Cosmetic item
+    1961142, -- Cosmetic item
+    1961143, -- Cosmetic item
 
     -- [ Tesla ]
-    1903071, -- Tesla Roadster (Kim Cương)
-    1903072, -- Tesla Roadster (Pha Lê Tím)
-    1903073, -- Tesla Roadster (Xanh Biển Cả)
+    1903071, -- Cosmetic item
+    1903072, -- Cosmetic item
+    1903073, -- Cosmetic item
 
     -- [ Ducati / Motor VIP ]
     1901073, -- DUCATI Panigale V4S
@@ -472,631 +471,631 @@ local ITEMS = {
     1901076, -- Ducati Panigale V4S Swift Mirage
 
     -- ==============================================================================
-    -- 3. FULL BAY DÙ (DÙ RƠI, TÀU LƯỢN, VÁN TRƯỢT BAY)
+    -- 3. FULL AIRBORNE ITEMS (PARACHUTES, GLIDERS, HOVERBOARDS)
     -- ==============================================================================
-    -- [ DÙ (Parachutes) ]
+    -- [ PARACHUTES ]
     1401000, -- New Years Blessing Parachute
     1401001, -- Happy New Year Parachute
-    1401002, -- Dù Xương Đỏ
-    1401003, -- Dù tiểu quỷ tinh nghịch
-    1401005, -- Dù nhện biến hình
-    1401006, -- Dù Mùa 5
-    1401007, -- Dù sinh nhật
-    1401008, -- Dù Sếu Vàng
-    1401009, -- Dù Quỷ Đỏ
-    1401010, -- Dù hoa bách thảo
-    1401011, -- Dù anh đào
-    1401012, -- Dù Campus Tournament
-    1401013, -- Dù Joker
-    1401014, -- Dù chú hề
+    1401002, -- Airborne cosmetic
+    1401003, -- Airborne cosmetic
+    1401005, -- Airborne cosmetic
+    1401006, -- Airborne cosmetic
+    1401007, -- Airborne cosmetic
+    1401008, -- Airborne cosmetic
+    1401009, -- Airborne cosmetic
+    1401010, -- Airborne cosmetic
+    1401011, -- Airborne cosmetic
+    1401012, -- Airborne cosmetic
+    1401013, -- Airborne cosmetic
+    1401014, -- Airborne cosmetic
     1401015, -- Carabao Parachute
     1401016, -- Orange Life Parachute
-    1401017, -- Dù ưng vàng
-    1401018, -- Dù Quán quân Mùa 8
-    1401019, -- Dù Đội trưởng Ryan
-    1401020, -- Dù kẻ lang thang
-    1401021, -- Dù cung trăng
+    1401017, -- Airborne cosmetic
+    1401018, -- Airborne cosmetic
+    1401019, -- Airborne cosmetic
+    1401020, -- Airborne cosmetic
+    1401021, -- Airborne cosmetic
     1401022, -- OPPO F11 PRO SURVIVOURS PARACHUTE
-    1401023, -- Dù lãnh chúa Sekigahara (Vuông)
-    1401024, -- Dù Đồng Minh Loot Thính
-    1401025, -- Dù Đêm Mê Hoặc (Vuông)
-    1401026, -- Dù cát tường
-    1401027, -- Dù PMCO
-    1401028, -- Dù Quán quân Mùa 7
-    1401029, -- Dù sinh nhật rực rỡ
-    1401031, -- Dù Quán quân Mùa 6
-    1401032, -- Dù Dao Găm Đỏ
-    1401033, -- Dù WALKER
-    1401034, -- Dù Phù Thủy Băng Giá
-    1401035, -- Dù người thách đấu
-    1401036, -- Dù BAPE X PUBGM CAMO
-    1401037, -- Dù Godzilla (Trắng)
-    1401038, -- Dù Godzilla (Vàng)
-    1401039, -- Dù Godzilla (Xanh)
-    1401040, -- Dù Monarch
-    1401041, -- Dù Cà Ri
-    1401043, -- Dù Người Gác Đêm
-    1401044, -- Dù hoa hồng đen
-    1401045, -- Dù Mèo May Mắn
-    1401046, -- Dù Đêm u ám
-    1401047, -- Dù Cá Voi Sát Thủ
-    1401048, -- Dù thủy quái Kraken
-    1401050, -- Dù giai điệu âm nhạc
-    1401051, -- Dù OPPO Reno
-    1401052, -- Dù OPPO VOOC
-    1401053, -- Dù Đêm Mê Hoặc
-    1401054, -- Dù Chú Heo Tinh Nghịch
-    1401055, -- Dù Red (Dài)
+    1401023, -- Airborne cosmetic
+    1401024, -- Airborne cosmetic
+    1401025, -- Airborne cosmetic
+    1401026, -- Airborne cosmetic
+    1401027, -- Airborne cosmetic
+    1401028, -- Airborne cosmetic
+    1401029, -- Airborne cosmetic
+    1401031, -- Airborne cosmetic
+    1401032, -- Airborne cosmetic
+    1401033, -- Airborne cosmetic
+    1401034, -- Airborne cosmetic
+    1401035, -- Airborne cosmetic
+    1401036, -- Airborne cosmetic
+    1401037, -- Airborne cosmetic
+    1401038, -- Airborne cosmetic
+    1401039, -- Airborne cosmetic
+    1401040, -- Airborne cosmetic
+    1401041, -- Airborne cosmetic
+    1401043, -- Airborne cosmetic
+    1401044, -- Airborne cosmetic
+    1401045, -- Airborne cosmetic
+    1401046, -- Airborne cosmetic
+    1401047, -- Airborne cosmetic
+    1401048, -- Airborne cosmetic
+    1401050, -- Airborne cosmetic
+    1401051, -- Airborne cosmetic
+    1401052, -- Airborne cosmetic
+    1401053, -- Airborne cosmetic
+    1401054, -- Airborne cosmetic
+    1401055, -- Airborne cosmetic
     1401056, -- PMJC Parachute
     1401057, -- PMSC Parachute
-    1401059, -- Dù Quán quân Draconian
-    1401060, -- Dù lãnh chúa Sekigahara
-    1401061, -- Dù Tiểu Quỷ
-    1401062, -- Dù Quán quân Mùa 9
-    1401063, -- Dù Quán quân Mùa 10
-    1401064, -- Dù Mèo Đen
-    1401065, -- Dù Gà trống
-    1401066, -- Dù Mọt Sách Băng Giá
-    1401067, -- Dù Người Giảm Đau #11
+    1401059, -- Airborne cosmetic
+    1401060, -- Airborne cosmetic
+    1401061, -- Airborne cosmetic
+    1401062, -- Airborne cosmetic
+    1401063, -- Airborne cosmetic
+    1401064, -- Airborne cosmetic
+    1401065, -- Airborne cosmetic
+    1401066, -- Airborne cosmetic
+    1401067, -- Airborne cosmetic
     1401068, -- Super Power Parachute
-    1401071, -- Dù Luân Hồi Vô Tận
-    1401072, -- Dù Chúa Tể Muôn Loài
-    1401074, -- Dù Bí Ngô Kinh Dị
-    1401085, -- Dù Gà Thơm Ngon
-    1401086, -- Dù Quán quân Mùa 11
-    1401087, -- Dù Hoa Sen Máu
-    1401088, -- Dù Hành Tinh Trôi Dạt
-    1401089, -- Dù Quán Quân Mùa 12
-    1401090, -- Dù Ninja Sát Thủ
-    1401091, -- Dù Neko Sakura
-    1401092, -- Dù Người Tiên Phong
-    1401094, -- Dù Fantasy Girl
-    1401095, -- Dù Tranh Vẽ Chiến Trường
-    1401096, -- Dù Người Phán Quyết
-    1401097, -- Dù Africa Pride
-    1401098, -- Dù Africa Unite
-    1401100, -- Dù Cậu Vàng
-    1401102, -- Dù đặc vụ PMSC World Cup
-    1401103, -- Dù Quân Đoàn Thất Lạc
-    1401104, -- Dù Giải Đấu PMCO
-    1401106, -- Dù Trung Úy Vũ Trụ
-    1401107, -- Dù Đầy Tớ Huyết Nha
-    1401108, -- Dù Street Dancer 3
-    1401109, -- Dù Unique KingCard
-    1401111, -- Dù Bánh Ú
-    1401112, -- Dù Gào Thét
-    1401113, -- Dù Thủ Vệ Tự Do
-    1401115, -- Dù Kẹo Ngọt
-    1401117, -- Dù Cao Bồi Viễn Tây
-    1401119, -- Dù Giáp Samurai
+    1401071, -- Airborne cosmetic
+    1401072, -- Airborne cosmetic
+    1401074, -- Airborne cosmetic
+    1401085, -- Airborne cosmetic
+    1401086, -- Airborne cosmetic
+    1401087, -- Airborne cosmetic
+    1401088, -- Airborne cosmetic
+    1401089, -- Airborne cosmetic
+    1401090, -- Airborne cosmetic
+    1401091, -- Airborne cosmetic
+    1401092, -- Airborne cosmetic
+    1401094, -- Airborne cosmetic
+    1401095, -- Airborne cosmetic
+    1401096, -- Airborne cosmetic
+    1401097, -- Airborne cosmetic
+    1401098, -- Airborne cosmetic
+    1401100, -- Airborne cosmetic
+    1401102, -- Airborne cosmetic
+    1401103, -- Airborne cosmetic
+    1401104, -- Airborne cosmetic
+    1401106, -- Airborne cosmetic
+    1401107, -- Airborne cosmetic
+    1401108, -- Airborne cosmetic
+    1401109, -- Airborne cosmetic
+    1401111, -- Airborne cosmetic
+    1401112, -- Airborne cosmetic
+    1401113, -- Airborne cosmetic
+    1401115, -- Airborne cosmetic
+    1401117, -- Airborne cosmetic
+    1401119, -- Airborne cosmetic
     1401122, -- Incredible Parachute
-    1401124, -- Dù Warrior
-    1401125, -- Dù Quý Cô Gothic
-    1401127, -- Dù Thần Thoại Ả Rập
-    1401128, -- Dù Nhà Vô Địch Arena
-    1401129, -- Dù Quán Quân Mùa 13
-    1401130, -- Dù Gorilla
-    1401131, -- Dù PMGC
-    1401133, -- Dù Mùa 15
-    1401134, -- Dù Tulip
-    1401135, -- Dù Ác Ma Cuồng Nộ
-    1401137, -- Dù Mùa 14
-    1401138, -- Dù Pro League (Vàng)
-    1401139, -- Dù Pro League (Bạc)
-    1401140, -- Dù Lạc Đà Bảnh Bao
-    1401141, -- Dù Gà Rán
-    1401142, -- Dù CLB Hoàng Gia
-    1401145, -- Dù Bảy Sắc
-    1401146, -- Dù Mountain Dew
-    1401147, -- Dù Tư Tế Tối Cao
-    1401148, -- Dù Idol
-    1401149, -- Dù Dang Rộng Đôi Cánh
-    1401150, -- Dù Chiến Binh Thép
-    1401151, -- Dù Quán Quân Mùa 16
-    1401152, -- Dù Liềm Tử Thần
-    1401153, -- Dù emoji Thỏa Mãn
-    1401154, -- Dù emoji
-    1401155, -- Dù emoji Vui Nhộn
-    1401156, -- Dù Qualcomm
-    1401157, -- Dù Điểm Sơ Tán
-    1401159, -- Dù Lãnh Chúa Độc Tài
-    1401160, -- Dù Kẹp Hạt Dẻ Vui Vẻ
-    1401161, -- Dù Long Vương
-    1401163, -- Dù Giáp Chiến Thần
-    1401164, -- Dù Giai Điệu Yêu Thương
-    1401165, -- Dù Quán Quân Mùa 17
-    1401167, -- Dù Ánh Trăng Huyền Bí
-    1401168, -- Dù Tiệc Disco
-    1401169, -- Dù Quán Quân Mùa 18
-    1401170, -- Dù Tuyết Anh Đào
-    1401171, -- Dù Tổ Ong
-    1401174, -- Dù Quán Quân Mùa 19
-    1401177, -- Dù Quán Quân C1S1
-    1401178, -- Dù Băng Cát Sét
-    1401179, -- Dù El Diablo
-    1401181, -- Chúa Tể Băng Giá - Dù
-    1401182, -- Dù Kẻ Săn Mồi Biển Xanh
-    1401183, -- Dù Mộng Điệp
-    1401184, -- Dù Bọ Cánh Cứng
-    1401186, -- Dù Rùa và Thỏ
-    1401187, -- Dù Nhịp Bước Mạnh Mẽ
-    1401188, -- Dù PMPL Mùa Xuân 2021
-    1401189, -- Dù GodzillaVsKong
-    1401190, -- Dù Hành Trình Kỳ Diệu
-    1401191, -- Dù Dấu Ấn Vũ Trụ
-    1401192, -- Dù Đầu Bếp Gà
-    1401193, -- Dù Nghệ Thuật Sắc Màu
-    1401194, -- Dù Aerial Punk Rich Brian
-    1401195, -- Dù OPPO
-    1401196, -- Dù BUG
-    1401197, -- Dù Chúa Tể Bánh Răng
-    1401198, -- Dù Xiaomi
-    1401200, -- Dù Đôi Mắt Biển Sâu
-    1401201, -- Dù OnePlus
-    1401204, -- Dù foodpanda
-    1401205, -- Dù PMPL Mùa Thu 2021
-    1401208, -- Dù Thành Phố Trên Không
-    1401209, -- Dù Bóng Ma Tương Lai
-    1401210, -- Dù Mật Thám Cơ Khí
-    1401212, -- Dù Thành Phố Sắc Màu
-    1401213, -- Dù Súng Hoa Hồng
-    1401215, -- Dù Băng Giá
-    1401216, -- Dù Bản Đồ Kho Báu
-    1401217, -- Dù Cơn Sốt Giáng Sinh
-    1401218, -- Dù Họa Tiết Vàng
-    1401219, -- Dù Vương Quốc Vàng
-    1401220, -- Dù Hoàng Hôn Rực Rỡ
-    1401221, -- Dù Bồ Câu Trắng
-    1401222, -- Dù Vòng Xoay Thời Gian
-    1401223, -- Dù Zong
-    1401224, -- Dù Quán Quân C1S2
-    1401225, -- Dù Quán Quân C1S3
-    1401227, -- Dù Đại Hạ Giá
-    1401228, -- Dù Lãng Khách Thời Thượng
-    1401231, -- Dù PMGC 2021
-    1401232, -- Dù Liverpool FC
-    1401233, -- Dù Đột Phá
-    1401234, -- Dù Voi Sắc Màu
-    1401235, -- Dù Hợp Tác Egor Kreed
+    1401124, -- Airborne cosmetic
+    1401125, -- Airborne cosmetic
+    1401127, -- Airborne cosmetic
+    1401128, -- Airborne cosmetic
+    1401129, -- Airborne cosmetic
+    1401130, -- Airborne cosmetic
+    1401131, -- Airborne cosmetic
+    1401133, -- Airborne cosmetic
+    1401134, -- Airborne cosmetic
+    1401135, -- Airborne cosmetic
+    1401137, -- Airborne cosmetic
+    1401138, -- Airborne cosmetic
+    1401139, -- Airborne cosmetic
+    1401140, -- Airborne cosmetic
+    1401141, -- Airborne cosmetic
+    1401142, -- Airborne cosmetic
+    1401145, -- Airborne cosmetic
+    1401146, -- Airborne cosmetic
+    1401147, -- Airborne cosmetic
+    1401148, -- Airborne cosmetic
+    1401149, -- Airborne cosmetic
+    1401150, -- Airborne cosmetic
+    1401151, -- Airborne cosmetic
+    1401152, -- Airborne cosmetic
+    1401153, -- Airborne cosmetic
+    1401154, -- Airborne cosmetic
+    1401155, -- Airborne cosmetic
+    1401156, -- Airborne cosmetic
+    1401157, -- Airborne cosmetic
+    1401159, -- Airborne cosmetic
+    1401160, -- Airborne cosmetic
+    1401161, -- Airborne cosmetic
+    1401163, -- Airborne cosmetic
+    1401164, -- Airborne cosmetic
+    1401165, -- Airborne cosmetic
+    1401167, -- Airborne cosmetic
+    1401168, -- Airborne cosmetic
+    1401169, -- Airborne cosmetic
+    1401170, -- Airborne cosmetic
+    1401171, -- Airborne cosmetic
+    1401174, -- Airborne cosmetic
+    1401177, -- Airborne cosmetic
+    1401178, -- Airborne cosmetic
+    1401179, -- Airborne cosmetic
+    1401181, -- Airborne cosmetic
+    1401182, -- Airborne cosmetic
+    1401183, -- Airborne cosmetic
+    1401184, -- Airborne cosmetic
+    1401186, -- Airborne cosmetic
+    1401187, -- Airborne cosmetic
+    1401188, -- Airborne cosmetic
+    1401189, -- Airborne cosmetic
+    1401190, -- Airborne cosmetic
+    1401191, -- Airborne cosmetic
+    1401192, -- Airborne cosmetic
+    1401193, -- Airborne cosmetic
+    1401194, -- Airborne cosmetic
+    1401195, -- Airborne cosmetic
+    1401196, -- Airborne cosmetic
+    1401197, -- Airborne cosmetic
+    1401198, -- Airborne cosmetic
+    1401200, -- Airborne cosmetic
+    1401201, -- Airborne cosmetic
+    1401204, -- Airborne cosmetic
+    1401205, -- Airborne cosmetic
+    1401208, -- Airborne cosmetic
+    1401209, -- Airborne cosmetic
+    1401210, -- Airborne cosmetic
+    1401212, -- Airborne cosmetic
+    1401213, -- Airborne cosmetic
+    1401215, -- Airborne cosmetic
+    1401216, -- Airborne cosmetic
+    1401217, -- Airborne cosmetic
+    1401218, -- Airborne cosmetic
+    1401219, -- Airborne cosmetic
+    1401220, -- Airborne cosmetic
+    1401221, -- Airborne cosmetic
+    1401222, -- Airborne cosmetic
+    1401223, -- Airborne cosmetic
+    1401224, -- Airborne cosmetic
+    1401225, -- Airborne cosmetic
+    1401227, -- Airborne cosmetic
+    1401228, -- Airborne cosmetic
+    1401231, -- Airborne cosmetic
+    1401232, -- Airborne cosmetic
+    1401233, -- Airborne cosmetic
+    1401234, -- Airborne cosmetic
+    1401235, -- Airborne cosmetic
     1401236, -- Gackt Moon Parachute
-    1401237, -- Dù Dune
-    1401238, -- Dù Guruh Gundala
-    1401239, -- Dù C2S4
-    1401240, -- Dù Baby Shark
-    1401241, -- Dù JAPAN LEAGUE S2
-    1401242, -- Dù Đầu Bếp Quái Thú
-    1401243, -- Dù Bá Chủ Đại Dương
-    1401244, -- Dù C2S5
-    1401245, -- Dù Nữ Hoàng Điện Tử
-    1401246, -- Dù Nhâm Dần
-    1401247, -- Dù Sắc Xuân
-    1401248, -- Dù Jujutsu Kaisen
-    1401249, -- Dù Shiba Inu
-    1401250, -- Dù Motorola
-    1401252, -- Dù Trận Chiến Trendy
-    1401254, -- Dù DJ Cá Tính
-    1401255, -- Dù Chị Chị Em Em
-    1401256, -- Dù Graffiti Neon
-    1401257, -- Dù C2S6
-    1401258, -- Dù Người Nhện: Không Còn Nhà
-    1401259, -- Dù Sát Thủ Thời Không
-    1401260, -- Dù Vùng Đất Hoang
-    1401261, -- Dù Sắc Màu
-    1401262, -- Dù Lễ Hội Sắc Màu
-    1401263, -- Dù Rạp Xiếc Thần Kỳ
-    1401264, -- Dù Thiếu Nữ Tóc Đỏ
-    1401265, -- Dù Bộ Đôi Hoàn Hảo
-    1401266, -- Dù Thiếu Nữ Song Sinh
-    1401267, -- Dù Cánh Cổng Kỳ Dị
-    1401268, -- Dù Thiếu Nữ Anime
-    1401269, -- Dù Gà Chiến Đấu
-    1401270, -- Dù Nến Xanh
-    1401271, -- Dù Hồn Ma Nghịch Ngợm
-    1401272, -- Dù Thiếu Nữ Cầu Nguyện
-    1401273, -- Dù Ma Nữ Đáng Yêu
-    1401274, -- Dù Evangelion NERV
-    1401275, -- Dù Chị Em Song Sinh
-    1401276, -- Dù PMPL Mùa Xuân 2022
-    1401277, -- Dù Gấu Teddy GB
-    1401278, -- Dù Sư Tử Thời Trang
-    1401280, -- Dù Kỷ Niệm Tuổi Thơ
-    1401281, -- Dù C3S7
-    1401282, -- Dù Mèo Khổng Lồ
-    1401283, -- Dù Butterfinger
-    1401284, -- Siêu Dù Nhảy
-    1401285, -- Dù Đồng Minh Mùa Hè
-    1401286, -- Dù Sóc Chuột
-    1401287, -- Dù Hỏa Diệm Ma Giáp
-    1401289, -- Dù Heartrocker
-    1401290, -- Dù Sư Tử Lưỡng Hà
-    1401291, -- Dù realme
-    1401292, -- Dù Lil Burger
-    1401294, -- Dù Dòng Sông Mộng Mơ
-    1401295, -- Dù C3S8
-    1401296, -- Dù Đêm Của Phép Màu
-    1401298, -- Dù Vinh Quang
-    1401299, -- Dù Bản Đồ Sao
-    1401300, -- Dù Chúa Tể Gai Độc
-    1401301, -- Dù Bóng Ma Và Nàng
-    1401302, -- Dù Gai Bé Bỏng
-    1401303, -- Dù Uqabi
-    1401308, -- Dù Phù Thủy Băng Giá
-    1401309, -- Dù Tốc Độ Cực Hạn
-    1401310, -- Dù PMWI 2022
+    1401237, -- Airborne cosmetic
+    1401238, -- Airborne cosmetic
+    1401239, -- Airborne cosmetic
+    1401240, -- Airborne cosmetic
+    1401241, -- Airborne cosmetic
+    1401242, -- Airborne cosmetic
+    1401243, -- Airborne cosmetic
+    1401244, -- Airborne cosmetic
+    1401245, -- Airborne cosmetic
+    1401246, -- Airborne cosmetic
+    1401247, -- Airborne cosmetic
+    1401248, -- Airborne cosmetic
+    1401249, -- Airborne cosmetic
+    1401250, -- Airborne cosmetic
+    1401252, -- Airborne cosmetic
+    1401254, -- Airborne cosmetic
+    1401255, -- Airborne cosmetic
+    1401256, -- Airborne cosmetic
+    1401257, -- Airborne cosmetic
+    1401258, -- Airborne cosmetic
+    1401259, -- Airborne cosmetic
+    1401260, -- Airborne cosmetic
+    1401261, -- Airborne cosmetic
+    1401262, -- Airborne cosmetic
+    1401263, -- Airborne cosmetic
+    1401264, -- Airborne cosmetic
+    1401265, -- Airborne cosmetic
+    1401266, -- Airborne cosmetic
+    1401267, -- Airborne cosmetic
+    1401268, -- Airborne cosmetic
+    1401269, -- Airborne cosmetic
+    1401270, -- Airborne cosmetic
+    1401271, -- Airborne cosmetic
+    1401272, -- Airborne cosmetic
+    1401273, -- Airborne cosmetic
+    1401274, -- Airborne cosmetic
+    1401275, -- Airborne cosmetic
+    1401276, -- Airborne cosmetic
+    1401277, -- Airborne cosmetic
+    1401278, -- Airborne cosmetic
+    1401280, -- Airborne cosmetic
+    1401281, -- Airborne cosmetic
+    1401282, -- Airborne cosmetic
+    1401283, -- Airborne cosmetic
+    1401284, -- Airborne cosmetic
+    1401285, -- Airborne cosmetic
+    1401286, -- Airborne cosmetic
+    1401287, -- Airborne cosmetic
+    1401289, -- Airborne cosmetic
+    1401290, -- Airborne cosmetic
+    1401291, -- Airborne cosmetic
+    1401292, -- Airborne cosmetic
+    1401294, -- Airborne cosmetic
+    1401295, -- Airborne cosmetic
+    1401296, -- Airborne cosmetic
+    1401298, -- Airborne cosmetic
+    1401299, -- Airborne cosmetic
+    1401300, -- Airborne cosmetic
+    1401301, -- Airborne cosmetic
+    1401302, -- Airborne cosmetic
+    1401303, -- Airborne cosmetic
+    1401308, -- Airborne cosmetic
+    1401309, -- Airborne cosmetic
+    1401310, -- Airborne cosmetic
     1401311, -- BGMI Esports Parachute
     1401312, -- PMJL SEASON3 Parachute
     1401313, -- PMPS 2022 Parachute
-    1401314, -- Dù Chiến Binh Ngưu
-    1401315, -- Dù Quyền Lực Tối Thượng
-    1401316, -- Dù Đội Bóng Ả Rập
-    1401317, -- Dù Ngàn Sao Rực Rỡ
-    1401318, -- Dù Pháp Sư Thiên Văn
-    1401319, -- Dù C3S9
-    1401320, -- Dù BoBoiBoy
-    1401323, -- Dù Đường Đua Hoang Dã
-    1401324, -- Dù Tuần Lộc Trắng
-    1401325, -- Dù Rìu Hoàng Kim
-    1401326, -- Dù Vàng Huyền Bí
-    1401330, -- Dù Du Hành Tinh Vân
-    1401332, -- Dù Mèo Tuyết
-    1401334, -- Dù KFC
-    1401335, -- Dù Thủy Sư Cuồng Nộ
-    1401336, -- Dù Sọ Nham Thạch
-    1401337, -- Dù Bá Chủ Bầu Trời
-    1401338, -- Dù Grubhub
-    1401339, -- Dù AFA
-    1401340, -- Dù Huyền Thoại Siêu Sao Messi
-    1401343, -- Dù PMGC 2022
-    1401345, -- Dù Bản Đồ Kho Báu
-    1401346, -- Dù Nobru
-    1401347, -- Dù Sony
-    1401349, -- Dù Đột Kích Trên Không
-    1401351, -- Dù Nữ Hiệp
-    1401353, -- Dù Chú Hề Quỷ Quyệt
-    1401355, -- Dù Lý Tiểu Long
-    1401356, -- Dù Cặp Đôi Diễn Võ
-    1401357, -- Dù Donkey King
-    1401360, -- Dù Pro League
-    1401361, -- Dù Kế Hoạch Đỏ Thẫm
-    1401362, -- Dù C4S11
-    1401363, -- Dù Bản Đồ Vũ Trụ
-    1401364, -- Dù BEUXOfficial
-    1401365, -- Dù Nguồn Sáng Vinh Quang
-    1401366, -- Dù Ký Ức Xưa
-    1401367, -- Dù Bugatti
-    1401368, -- Dù Hóa Thạch Khủng Long
-    1401369, -- Dù Trốn Thoát T-Rex
-    1401370, -- Dù Dragon Ball Super
-    1401371, -- Dù C4S12
-    1401372, -- Dù Huyết Rồng
+    1401314, -- Airborne cosmetic
+    1401315, -- Airborne cosmetic
+    1401316, -- Airborne cosmetic
+    1401317, -- Airborne cosmetic
+    1401318, -- Airborne cosmetic
+    1401319, -- Airborne cosmetic
+    1401320, -- Airborne cosmetic
+    1401323, -- Airborne cosmetic
+    1401324, -- Airborne cosmetic
+    1401325, -- Airborne cosmetic
+    1401326, -- Airborne cosmetic
+    1401330, -- Airborne cosmetic
+    1401332, -- Airborne cosmetic
+    1401334, -- Airborne cosmetic
+    1401335, -- Airborne cosmetic
+    1401336, -- Airborne cosmetic
+    1401337, -- Airborne cosmetic
+    1401338, -- Airborne cosmetic
+    1401339, -- Airborne cosmetic
+    1401340, -- Airborne cosmetic
+    1401343, -- Airborne cosmetic
+    1401345, -- Airborne cosmetic
+    1401346, -- Airborne cosmetic
+    1401347, -- Airborne cosmetic
+    1401349, -- Airborne cosmetic
+    1401351, -- Airborne cosmetic
+    1401353, -- Airborne cosmetic
+    1401355, -- Airborne cosmetic
+    1401356, -- Airborne cosmetic
+    1401357, -- Airborne cosmetic
+    1401360, -- Airborne cosmetic
+    1401361, -- Airborne cosmetic
+    1401362, -- Airborne cosmetic
+    1401363, -- Airborne cosmetic
+    1401364, -- Airborne cosmetic
+    1401365, -- Airborne cosmetic
+    1401366, -- Airborne cosmetic
+    1401367, -- Airborne cosmetic
+    1401368, -- Airborne cosmetic
+    1401369, -- Airborne cosmetic
+    1401370, -- Airborne cosmetic
+    1401371, -- Airborne cosmetic
+    1401372, -- Airborne cosmetic
     1401373, -- UNIVERSTAR BT21 Parachute
-    1401374, -- Dù HUAWEI AppGallery
-    1401375, -- Dù PMWI 2023
-    1401376, -- Dù C5S13
-    1401377, -- Dù Thỏ Disco
-    1401378, -- Dù Aston Martin
-    1401379, -- Dù Mùa Hè Trên Bãi Biển
-    1401380, -- Dù C5S14
-    1401381, -- Dù C5S15
-    1401382, -- Dù PMGC 2023
-    1401383, -- Dù KFC
-    1401385, -- Dù Yeti Khổng Lồ
-    1401386, -- Dù Pagani
-    1401387, -- Dù Báo Sắc Màu
-    1401388, -- Dù Bé Sóc Đáng Yêu
-    1401389, -- Dù Kỳ Giông Hồng
+    1401374, -- Airborne cosmetic
+    1401375, -- Airborne cosmetic
+    1401376, -- Airborne cosmetic
+    1401377, -- Airborne cosmetic
+    1401378, -- Airborne cosmetic
+    1401379, -- Airborne cosmetic
+    1401380, -- Airborne cosmetic
+    1401381, -- Airborne cosmetic
+    1401382, -- Airborne cosmetic
+    1401383, -- Airborne cosmetic
+    1401385, -- Airborne cosmetic
+    1401386, -- Airborne cosmetic
+    1401387, -- Outfit cosmetic
+    1401388, -- Airborne cosmetic
+    1401389, -- Airborne cosmetic
     1401390, -- RS Swagster Parachute
-    1401391, -- Dù Gấu Trúc Ngọt Ngào
-    1401392, -- Dù Chiến Binh Hoa Hồng
-    1401393, -- Dù Cuộc Chiến Chính Nghĩa
-    1401394, -- Dù LINE FRIENDS
-    1401395, -- Dù Hồ Ly Thần Bí
-    1401396, -- Dù Zanmang Loopy
+    1401391, -- Airborne cosmetic
+    1401392, -- Airborne cosmetic
+    1401393, -- Airborne cosmetic
+    1401394, -- Airborne cosmetic
+    1401395, -- Airborne cosmetic
+    1401396, -- Airborne cosmetic
     1401397, -- Hardik Sky Parachute
-    1401398, -- Dù C6S16
-    1401399, -- Dù Bóng Ma Quyến Rũ
-    1401400, -- Dù Bảo Hộ Hoàng Gia
-    1401401, -- Dù Bentley
-    1401402, -- SPY×FAMILY Dù
-    1401403, -- Dù Nhật Thực
-    1401404, -- Dù Chiến Sĩ Thần Giáp
-    1401405, -- Dù C6S17
-    1401406, -- Dù Giai Điệu Mèo Con
-    1401407, -- Dù Thành Phố Hỗn Loạn
-    1401408, -- Dù Đôi Cánh Cận Vệ
-    1401409, -- Dù Thiết Mã
-    1401410, -- Dù Bay Lướt Vũ Trụ
-    1401411, -- Dù C6 S18
-    1401412, -- Dù Nữ Đế Hắc Ám
-    1401413, -- Dù Hợp Tác Lamborghini
-    1401416, -- Dù Tượng Đá Cổ Xưa
-    1401417, -- Dù Đại Dương Xanh
+    1401398, -- Airborne cosmetic
+    1401399, -- Airborne cosmetic
+    1401400, -- Airborne cosmetic
+    1401401, -- Airborne cosmetic
+    1401402, -- Airborne cosmetic
+    1401403, -- Airborne cosmetic
+    1401404, -- Airborne cosmetic
+    1401405, -- Airborne cosmetic
+    1401406, -- Airborne cosmetic
+    1401407, -- Airborne cosmetic
+    1401408, -- Airborne cosmetic
+    1401409, -- Airborne cosmetic
+    1401410, -- Airborne cosmetic
+    1401411, -- Airborne cosmetic
+    1401412, -- Airborne cosmetic
+    1401413, -- Airborne cosmetic
+    1401416, -- Airborne cosmetic
+    1401417, -- Airborne cosmetic
     1401418, -- KAKAO FRIENDS Parachute
-    1401419, -- Dù Infinix GT
-    1401420, -- Dù Esports World Cup 2024
-    1401421, -- Dù C7S19
-    1401422, -- Dù Thỏ Tinh Quái
-    1401423, -- Dù Hợp Tác VW
-    1401424, -- Dù Miêu Linh Sắc Màu
-    1401425, -- Dù Hắc Long Ma Nhãn
-    1401426, -- Dù Âm Dương
+    1401419, -- Airborne cosmetic
+    1401420, -- Airborne cosmetic
+    1401421, -- Airborne cosmetic
+    1401422, -- Airborne cosmetic
+    1401423, -- Airborne cosmetic
+    1401424, -- Airborne cosmetic
+    1401425, -- Airborne cosmetic
+    1401426, -- Airborne cosmetic
     1401427, -- NieR:Automata Parachute
-    1401428, -- Dù Đam Mê Esports
-    1401429, -- Dù C7S20
-    1401430, -- Dù Venom: Kèo Cuối
-    1401431, -- Dù Bộ Tộc Ngân Hà
-    1401432, -- Dù Tuần Lộc Hoàng Gia
-    1401433, -- Dù McLaren
-    1401434, -- Dù PMGC 2024
-    1401435, -- Dù lượn Sói Tuyết
-    1401436, -- Dù lượn Bóng Nước
-    1401437, -- Dù lượn C7S21
-    1401438, -- Dù Cá Koi Xuân Sắc
-    1401439, -- Dù Đại Bàng
-    1401440, -- Dù Hoa Hồng Bóng Đêm
+    1401428, -- Airborne cosmetic
+    1401429, -- Airborne cosmetic
+    1401430, -- Airborne cosmetic
+    1401431, -- Airborne cosmetic
+    1401432, -- Airborne cosmetic
+    1401433, -- Airborne cosmetic
+    1401434, -- Airborne cosmetic
+    1401435, -- Airborne cosmetic
+    1401436, -- Airborne cosmetic
+    1401437, -- Airborne cosmetic
+    1401438, -- Airborne cosmetic
+    1401439, -- Airborne cosmetic
+    1401440, -- Airborne cosmetic
     1401441, -- Opanchu Parachute
     1401442, -- Neon Drop BE 6 Parachute
-    1401443, -- Dù C8S22
-    1401444, -- Dù Lượn Hắc Cốt
-    1401445, -- Dù Cực Quang Tinh Tú
-    1401446, -- Godzilla vs. Dù Destoroyah
-    1401447, -- Dù Thỏ Bồng Bềnh
+    1401443, -- Airborne cosmetic
+    1401444, -- Airborne cosmetic
+    1401445, -- Airborne cosmetic
+    1401446, -- Airborne cosmetic
+    1401447, -- Airborne cosmetic
     1401448, -- Parachute(Frieren&Fern)
-    1401449, -- Dù C8S23
-    1401450, -- Dù Lượn Mã Số Hóa 
-    1401451, -- Dù Lượn Khuếch Đại Sắc Màu
-    1401452, -- Dù Hợp Tác Shelby
-    1401453, -- Dù Ráng Chiều Rực Cháy
-    1401454, -- Dù Attack on Titan
-    1401455, -- Dù Cơ Khí 
+    1401449, -- Airborne cosmetic
+    1401450, -- Airborne cosmetic
+    1401451, -- Airborne cosmetic
+    1401452, -- Airborne cosmetic
+    1401453, -- Airborne cosmetic
+    1401454, -- Airborne cosmetic
+    1401455, -- Airborne cosmetic
     1401456, -- Mountain Dew Neon Shard Parachute
-    1401457, -- Dù C8S24
-    1401458, -- Dù Vũ Trụ
-    1401459, -- Dù Transformers
-    1401460, -- Dù Thần Mệnh
-    1401461, -- Dù Cún Yêu
+    1401457, -- Airborne cosmetic
+    1401458, -- Airborne cosmetic
+    1401459, -- Airborne cosmetic
+    1401460, -- Airborne cosmetic
+    1401461, -- Airborne cosmetic
     1401462, -- Bbangbbang's diary Parachute
     1401463, -- Realme Parachute
-    1401464, -- Dù Infinix GT
-    1401465, -- Dù C9S25
-    1401466, -- Dù Ác Quỷ
-    1401467, -- Dù Kaiju No. 8
-    1401468, -- Dù TEAM SONIC
-    1401469, -- Dù Hồ Điệp Lấp Lánh
-    1401470, -- Dù Lotus
-    1401471, -- Dù Bông Xù
-    1401472, -- Dù Gen Hoàn Hảo
+    1401464, -- Airborne cosmetic
+    1401465, -- Airborne cosmetic
+    1401466, -- Airborne cosmetic
+    1401467, -- Airborne cosmetic
+    1401468, -- Airborne cosmetic
+    1401469, -- Airborne cosmetic
+    1401470, -- Airborne cosmetic
+    1401471, -- Airborne cosmetic
+    1401472, -- Airborne cosmetic
     1401473, -- Tokyo Revengers Parachute
     1401474, -- Sky Striker Parachute
-    1401475, -- Dù C9S26
-    1401476, -- Dù Lượn Gấu Ngọt Ngào
-    1401477, -- Dù Balenciaga
-    1401478, -- Dù Lượn Tuyết Hàn
-    1401479, -- Dù Porsche
-    1401480, -- Dù Hắc Linh
-    1401481, -- Dù Chồn Chill
+    1401475, -- Airborne cosmetic
+    1401476, -- Airborne cosmetic
+    1401477, -- Airborne cosmetic
+    1401478, -- Airborne cosmetic
+    1401479, -- Airborne cosmetic
+    1401480, -- Airborne cosmetic
+    1401481, -- Airborne cosmetic
     1401482, -- TV Anime DAN DA DAN Parachute
-    1401483, -- Dù C9S27
-    1401484, -- Dù Lượn Shuriken
-    1401485, -- Dù Bóng Ma Anh Quốc
-    1401486, -- Dù The King of Fighters
-    1401487, -- Dù Lượn Vũ Khúc
-    1401488, -- Dù Bảo Thạch
-    1401489, -- Dù Chuỗi Mùa Giải (2026H1)
-    1401490, -- Dù S28
-    1401491, -- Dù Trò Chơi Chúa Hề Lém Lĩnh
-    1401492, -- Dù Apollo
-    1401493, -- Dù Hacker Lạnh Lùng
-    1401494, -- Dù Hội Tụ Đa Chiều
+    1401483, -- Airborne cosmetic
+    1401484, -- Airborne cosmetic
+    1401485, -- Airborne cosmetic
+    1401486, -- Airborne cosmetic
+    1401487, -- Airborne cosmetic
+    1401488, -- Airborne cosmetic
+    1401489, -- Airborne cosmetic
+    1401490, -- Airborne cosmetic
+    1401491, -- Airborne cosmetic
+    1401492, -- Airborne cosmetic
+    1401493, -- Airborne cosmetic
+    1401494, -- Airborne cosmetic
     1401495, -- Catch! Teenieping Parachute
     1401496, -- SAKAMOTO TARO Parachute
     1401497, -- Nakiri Ayame Parachute
-    1401498, -- Dù S29
+    1401498, -- Airborne cosmetic
     1401499, -- Toxic Parachute
-    1401500, -- Dù Red (Tròn)
-    1401511, -- Dù Mèo Tinh Nghịch
-    1401513, -- Dù San Martin FC
-    1401515, -- Dù Mắt Quỷ
-    1401516, -- Dù Sóng Đêm
-    1401517, -- Dù Quả Quýt
-    1401519, -- Dù Gấu Ngáy Ngủ
-    1401520, -- Dù Hậu Duệ Đế Vương
-    1401521, -- Dù Mây Cuộn
-    1401526, -- Dù Hoa Văn Tráng Lệ
-    1401527, -- Dù Trái Tim Biển Cả
-    1401528, -- Dù Hành Tinh Mẹ
-    1401529, -- Dù Hoàng Tử Ánh Kim
-    1401530, -- Dù Giáp Gai
-    1401531, -- Dù Vùng Nguy Hiểm
-    1401532, -- Dù Ốc Biển
-    1401534, -- Dù Vịt Vàng B.Duck
-    1401538, -- Dù Thỏ Dịu Dàng
-    1401540, -- Dù Yeti
-    1401541, -- Dù Pixel Sắc Màu
-    1401542, -- Dù Mỹ Vị
-    1401543, -- Dù I Love Tao Kae Noi
-    1401544, -- Dù Vẹt Baby
-    1401545, -- Dù U.F.O
-    1401546, -- Dù Baby Shark
-    1401547, -- Dù Gấu Nhồi Bông
-    1401548, -- Dù Mèo Nghiêm Túc
-    1401549, -- Dù Vinh Quang Trường Tồn
-    1401551, -- Dù Nữ Vương Khôi Giáp
-    1401554, -- Dù Khủng Long Pixel
-    1401555, -- Dù Cánh Bướm Hoàng Gia
-    1401556, -- Dù Hành Trình Ngọt Ngào
-    1401610, -- Dù Chúc Mừng Sinh Nhật
-    1401611, -- Dù Sân Khấu Lấp Lánh
-    1401613, -- Dù Thẩm Phán Anubis
-    1401615, -- Dù Thần Horus
-    1401616, -- Dù One Plus
-    1401617, -- Dù Sư Tử Hống
-    1401618, -- Dù Facebook
-    1401619, -- Dù Bùa Hộ Mệnh Pharaoh
-    1401620, -- Dù Pharaoh (Xanh)
-    1401621, -- Dù Huyết Nha
-    1401622, -- Dù LINE FRIENDS
-    1401623, -- Dù PMNC 2021
-    1401624, -- Dù Poseidon
-    1401625, -- Dù Công Chúa Bộ Lạc
-    1401628, -- Dù Phượng Hoàng Adarna Ảo Diệu
-    1401629, -- Dù Thiếu Nữ Sáng Thế
+    1401500, -- Airborne cosmetic
+    1401511, -- Airborne cosmetic
+    1401513, -- Airborne cosmetic
+    1401515, -- Airborne cosmetic
+    1401516, -- Airborne cosmetic
+    1401517, -- Airborne cosmetic
+    1401519, -- Airborne cosmetic
+    1401520, -- Airborne cosmetic
+    1401521, -- Airborne cosmetic
+    1401526, -- Airborne cosmetic
+    1401527, -- Airborne cosmetic
+    1401528, -- Airborne cosmetic
+    1401529, -- Airborne cosmetic
+    1401530, -- Airborne cosmetic
+    1401531, -- Airborne cosmetic
+    1401532, -- Airborne cosmetic
+    1401534, -- Airborne cosmetic
+    1401538, -- Airborne cosmetic
+    1401540, -- Airborne cosmetic
+    1401541, -- Vehicle cosmetic
+    1401542, -- Airborne cosmetic
+    1401543, -- Airborne cosmetic
+    1401544, -- Airborne cosmetic
+    1401545, -- Airborne cosmetic
+    1401546, -- Airborne cosmetic
+    1401547, -- Airborne cosmetic
+    1401548, -- Airborne cosmetic
+    1401549, -- Airborne cosmetic
+    1401551, -- Airborne cosmetic
+    1401554, -- Vehicle cosmetic
+    1401555, -- Airborne cosmetic
+    1401556, -- Airborne cosmetic
+    1401610, -- Airborne cosmetic
+    1401611, -- Airborne cosmetic
+    1401613, -- Airborne cosmetic
+    1401615, -- Airborne cosmetic
+    1401616, -- Airborne cosmetic
+    1401617, -- Airborne cosmetic
+    1401618, -- Airborne cosmetic
+    1401619, -- Airborne cosmetic
+    1401620, -- Airborne cosmetic
+    1401621, -- Airborne cosmetic
+    1401622, -- Airborne cosmetic
+    1401623, -- Airborne cosmetic
+    1401624, -- Airborne cosmetic
+    1401625, -- Airborne cosmetic
+    1401628, -- Airborne cosmetic
+    1401629, -- Airborne cosmetic
     1401811, -- Giannis Parachute
-    1401813, -- Dù Hành Trình Anh Hùng
-    1401814, -- Dù Rock 'n' Roll
-    1401815, -- Dù Chỉ Huy Chiến Trường
-    1401816, -- Dù BURGER KING
-    1401817, -- Dù Chiến Binh Huyết Ưng
-    1401820, -- Dù Cá Chuồn
-    1401822, -- Dù Quái Thú Đầm Lầy
-    1401823, -- Dù Lãnh Chúa Phong
-    1401824, -- Dù Hộp Quà
-    1401826, -- Dù - Mối Tình Đầu
-    1401827, -- Dù Nữ Hoàng Cà Phê
-    1401828, -- Dù Vệ Binh Cổ Đại
-    1401829, -- Dù Cơn Giận Của Thần
-    1401832, -- Dù C4S10
-    1401833, -- Dù Quái Thú Mê Cung
-    1401835, -- Dù Poker Đối Kháng
-    1401836, -- Dù Trò Chơi Chú Hề
-    1401837, -- Dù Huyễn Ảnh
-    1401838, -- Dù BLUE LOCK
-    1401839, -- Dù Ford
-    1401840, -- Dù Harley-Davidson®
-    1401841, -- Dù Hoa Hồng Cốt
-    1401842, -- Dù Song Tử
-    1401843, -- Dù Lượn Vòng Nguyệt Quế
+    1401813, -- Airborne cosmetic
+    1401814, -- Airborne cosmetic
+    1401815, -- Airborne cosmetic
+    1401816, -- Airborne cosmetic
+    1401817, -- Airborne cosmetic
+    1401820, -- Airborne cosmetic
+    1401822, -- Airborne cosmetic
+    1401823, -- Airborne cosmetic
+    1401824, -- Airborne cosmetic
+    1401826, -- Airborne cosmetic
+    1401827, -- Airborne cosmetic
+    1401828, -- Airborne cosmetic
+    1401829, -- Airborne cosmetic
+    1401832, -- Airborne cosmetic
+    1401833, -- Airborne cosmetic
+    1401835, -- Airborne cosmetic
+    1401836, -- Airborne cosmetic
+    1401837, -- Airborne cosmetic
+    1401838, -- Airborne cosmetic
+    1401839, -- Airborne cosmetic
+    1401840, -- Airborne cosmetic
+    1401841, -- Airborne cosmetic
+    1401842, -- Airborne cosmetic
+    1401843, -- Airborne cosmetic
     1401844, -- Parachute(Pubniku)
-    1401845, -- Dù S30
-    1401846, -- Dù Sự Kiện Trial of Fire
+    1401845, -- Airborne cosmetic
+    1401846, -- Airborne cosmetic
 
-    -- [ TÀU LƯỢN / VÁN TRƯỢT / THIẾT BỊ BAY (Gliders/Hoverboards) ]
-    4151001, -- Dù (Xanh)
-    4151002, -- Hiệu ứng nhảy dù (Vàng)
-    4151003, -- Khói Lượn Dù (Hồng)
-    4151004, -- Khói lượn xanh
-    4151006, -- Khói lượn cầu vồng
-    4151010, -- Thiết bị bay Bằng Chíu
-    4151012, -- Ván Trượt Chu Kỳ
-    4151013, -- Ván Trượt Tuyết
-    4151014, -- Ván trượt CHU KỲ 2
-    4151015, -- Khói Lượn Dù Chúc Mừng (3 màu)
-    4151017, -- Ván trượt Trái Tim Rừng Xanh
-    4151018, -- Ván trượt Sinh Nhật
-    4151019, -- Tàu Lượn Chiến Thần Tình Yêu
-    4151020, -- Ván Trượt Cảnh Vệ C3
-    4151021, -- Tàu Lượn Sứ Giả Của Thần
-    4151022, -- Tàu Lượn Cánh Vàng
-    4151023, -- Ván Trượt Hợp Tác Messi
-    4151024, -- Tàu Lượn Giáo Sĩ Đỏ Thẫm
-    4151025, -- Tàu Lượn Diều Giấy
-    4151026, -- Ván Trượt Đại Sư Võ Hồn
-    4151027, -- Ván Trượt Cycle 4
-    4151028, -- Ván Trượt Giọt Lệ Huyết
-    4151029, -- Tàu Lượn Nữ Đế Ánh Sáng
-    4151030, -- Tàu Lượn Ma Vương Huyết Hồn
-    4151031, -- Tàu Lượn Khủng Long Túi Tiền
-    4151032, -- Tàu Lượn Cánh Rồng Đỏ Thẫm
-    4151034, -- Cân Đẩu Vân
-    4151035, -- Tàu Lượn Giao Hưởng Gió
-    4151036, -- Ván Trượt Máy Dập Sóng
-    4151037, -- Ván Trượt CYCLE 5
-    4151038, -- Dù Lượn Ngọc Trai Tuyệt Hảo
-    4151040, -- Ván trượt Thợ Săn Điện Quang
-    4151041, -- Dù Lượn Xương Xanh
-    4151042, -- Tàu Lượn Công Chúa Công Nghệ
-    4151043, -- Tàu Lượn Công Chúa Công Nghệ
-    4151044, -- Ván Trượt Cá Mập
-    4151045, -- Dù Lượn Mùa Đông Hoàng Gia
-    4151046, -- Ván Trượt Lưỡi Dao Trời Xanh
-    4151056, -- Dù Lượn Mùa Đông Hoàng Gia
-    4151057, -- Ván Trượt Hỏa Hồ Ly
-    4151058, -- Dù Lượn LINE FRIENDS
-    4151059, -- Ván Trượt Xuyên Mây
-    4151060, -- Dù Lượn Xà Kim
-    4151061, -- Ván Trượt CYCLE 6
-    4151062, -- Khói Lượn Dù Zanmang Loopy
-    4151063, -- SPY×FAMILY Tàu Lượn Bond
-    4151064, -- Dù Lượn Thiên Sứ
-    4151065, -- Dù Lượn Thiên Sứ
-    4151066, -- Dù Lượn Đế Vương Thần Vực
-    4151067, -- Dù Lượn Kính Vạn Hoa
-    4151068, -- Tàu Lượn Chúa Tể Gai Độc
-    4151069, -- Tàu Lượn Tinh Vân Sấm Sét
-    4151070, -- Tàu Lượn Kỵ Binh Thần Giáp
-    4151071, -- Dù Lượn Vệ Thần Tình Ái
-    4151072, -- Dù Lượn Ngao Du Vũ Trụ
-    4151073, -- Dù Lượn Neon Huyền Bí
+    -- [ GLIDERS / HOVERBOARDS / AIRBORNE EQUIPMENT ]
+    4151001, -- Airborne cosmetic
+    4151002, -- Airborne cosmetic
+    4151003, -- Airborne cosmetic
+    4151004, -- Cosmetic item
+    4151006, -- Cosmetic item
+    4151010, -- Cosmetic item
+    4151012, -- Airborne cosmetic
+    4151013, -- Airborne cosmetic
+    4151014, -- Airborne cosmetic
+    4151015, -- Airborne cosmetic
+    4151017, -- Airborne cosmetic
+    4151018, -- Airborne cosmetic
+    4151019, -- Airborne cosmetic
+    4151020, -- Airborne cosmetic
+    4151021, -- Airborne cosmetic
+    4151022, -- Airborne cosmetic
+    4151023, -- Airborne cosmetic
+    4151024, -- Outfit cosmetic
+    4151025, -- Airborne cosmetic
+    4151026, -- Airborne cosmetic
+    4151027, -- Airborne cosmetic
+    4151028, -- Airborne cosmetic
+    4151029, -- Airborne cosmetic
+    4151030, -- Airborne cosmetic
+    4151031, -- Airborne cosmetic
+    4151032, -- Airborne cosmetic
+    4151034, -- Cosmetic item
+    4151035, -- Airborne cosmetic
+    4151036, -- Airborne cosmetic
+    4151037, -- Airborne cosmetic
+    4151038, -- Airborne cosmetic
+    4151040, -- Airborne cosmetic
+    4151041, -- Airborne cosmetic
+    4151042, -- Airborne cosmetic
+    4151043, -- Airborne cosmetic
+    4151044, -- Airborne cosmetic
+    4151045, -- Airborne cosmetic
+    4151046, -- Airborne cosmetic
+    4151056, -- Airborne cosmetic
+    4151057, -- Airborne cosmetic
+    4151058, -- Airborne cosmetic
+    4151059, -- Airborne cosmetic
+    4151060, -- Airborne cosmetic
+    4151061, -- Airborne cosmetic
+    4151062, -- Airborne cosmetic
+    4151063, -- Airborne cosmetic
+    4151064, -- Airborne cosmetic
+    4151065, -- Airborne cosmetic
+    4151066, -- Airborne cosmetic
+    4151067, -- Airborne cosmetic
+    4151068, -- Airborne cosmetic
+    4151069, -- Airborne cosmetic
+    4151070, -- Airborne cosmetic
+    4151071, -- Airborne cosmetic
+    4151072, -- Airborne cosmetic
+    4151073, -- Airborne cosmetic
     4151074, -- PUBGM X NewJeans Glider
-    4151075, -- Dù Lượn Vệ Thần Tình Ái
-    4151076, -- Tàu Lượn Cửu Phong Thiên Tôn
-    4151077, -- Máy Bay
-    4151078, -- Tàu Lượn Hải Mã Sắt
-    4151079, -- Tàu Lượn Đôi Cánh Thế Giới Ngầm
-    4151080, -- Ván Trượt Cycle 7
-    4151083, -- Dù Lượn Long Cốt
-    4151084, -- Hồng Hỏa Diệm - Kar98 (Cấp 8)
-    4151085, -- Dù Lượn Cánh Thép Xuyên Không
+    4151075, -- Airborne cosmetic
+    4151076, -- Airborne cosmetic
+    4151077, -- Cosmetic item
+    4151078, -- Airborne cosmetic
+    4151079, -- Airborne cosmetic
+    4151080, -- Airborne cosmetic
+    4151083, -- Airborne cosmetic
+    4151084, -- Cosmetic item (Level 8)
+    4151085, -- Airborne cosmetic
     4151086, -- DP Drift Parachute
-    4151087, -- Dù Lượn Long Cốt
-    4151089, -- Dù Lượn Hắc Điểu 
-    4151090, -- Dù Lượn Giấc Mộng Ngọt Ngào
-    4151091, -- Tàu Lượn Nhà Khám Phá Vũ Trụ
-    4151092, -- Dù Lượn Lam Sư Tinh Hà
-    4151093, -- Dù Lượn Ngọc Lang Thiên Giới
-    4151094, -- Ván Trượt CYCLE 8
-    4151095, -- Dù Lượn Đôi Cánh Anukhra
-    4151096, -- Dù Lượn Đôi Cánh Pharaoh
-    4151097, -- Tàu Lượn Siêu Thú Ghidorah
-    4151098, -- Dù Lượn Thời Quang Khả Biến
-    4151099, -- Dù Lượn Vương Quyền Hắc Ám
-    4151103, -- Dù Lượn Chiến Xa Tinh Tú
-    4151104, -- Tàu Lượn Thiết Bị ODM
-    4151105, -- Dù Lượn Định Mệnh Huyết Chú
-    4151106, -- Dù Lượn Quang Ảo Điện Từ 
-    4151107, -- Dù Lượn Chiến Xa Tinh Tú
-    4151108, -- Tàu Lượn Laserbreak
-    4151109, -- Tàu Lượn Băng Thần
-    4151110, -- Tàu Lượn Long Thánh
-    4151111, -- Tàu Lượn Thợ Săn Phản Lực
-    4151112, -- Tàu Lượn Tà Thần Mỹ Quang
-    4151113, -- Ván Trượt CYCLE 9
-    4151114, -- Tàu Lượn Long Thánh
-    4151115, -- Tàu Lượn Băng Thần
-    4151117, -- Tàu Lượn Preondactyl
-    4151118, -- Dù Lượn Hồ Điệp Lấp Lánh
-    4151119, -- Dù Lượn Chổi Phép Thuật
-    4151120, -- Dù Lượn Long Kính
+    4151087, -- Airborne cosmetic
+    4151089, -- Airborne cosmetic
+    4151090, -- Airborne cosmetic
+    4151091, -- Airborne cosmetic
+    4151092, -- Airborne cosmetic
+    4151093, -- Airborne cosmetic
+    4151094, -- Airborne cosmetic
+    4151095, -- Airborne cosmetic
+    4151096, -- Airborne cosmetic
+    4151097, -- Airborne cosmetic
+    4151098, -- Airborne cosmetic
+    4151099, -- Airborne cosmetic
+    4151103, -- Airborne cosmetic
+    4151104, -- Airborne cosmetic
+    4151105, -- Airborne cosmetic
+    4151106, -- Airborne cosmetic
+    4151107, -- Airborne cosmetic
+    4151108, -- Airborne cosmetic
+    4151109, -- Airborne cosmetic
+    4151110, -- Airborne cosmetic
+    4151111, -- Airborne cosmetic
+    4151112, -- Airborne cosmetic
+    4151113, -- Airborne cosmetic
+    4151114, -- Airborne cosmetic
+    4151115, -- Airborne cosmetic
+    4151117, -- Airborne cosmetic
+    4151118, -- Airborne cosmetic
+    4151119, -- Airborne cosmetic
+    4151120, -- Airborne cosmetic
     4151121, -- Mikey Glider
-    4151122, -- Dù Lượn Hồ Điệp Lấp Lánh
-    4151123, -- Tàu Lượn Băng Linh Lưu Ly
-    4151124, -- Tàu Lượn Huyết Dực Tử Thần
-    4151125, -- Tàu Lượn Vệ Binh Ngân Hà
-    4151126, -- Tàu Lượn Giải Trí
-    4151127, -- Tàu Lượn Linh Mộc Vĩnh Cửu
-    4151128, -- Tàu Lượn Thần Quang
-    4151129, -- Ván Trượt Chuỗi Mùa Giải (2026H1)
-    4151130, -- Tàu Lượn Nue
-    4151131, -- Tàu Lượn Phượng Hoàng Đế Vương
-    4151132, -- Tàu Lượn Huyết Dực Hắc Điểu
-    4151133, -- Tàu Lượn Dịch Chuyển Không Gian
-    4151134, -- Dù Lượn Đa Vũ Trụ
+    4151122, -- Airborne cosmetic
+    4151123, -- Airborne cosmetic
+    4151124, -- Airborne cosmetic
+    4151125, -- Airborne cosmetic
+    4151126, -- Airborne cosmetic
+    4151127, -- Airborne cosmetic
+    4151128, -- Airborne cosmetic
+    4151129, -- Airborne cosmetic
+    4151130, -- Airborne cosmetic
+    4151131, -- Airborne cosmetic
+    4151132, -- Airborne cosmetic
+    4151133, -- Airborne cosmetic
+    4151134, -- Airborne cosmetic
     4151135, -- SAKAMOTO TARO Glider
-    4151138, -- Tàu Lượn Sấm Sét Đỏ
-    4151139, -- Tàu Lượn Hư Không
-    4151140, -- Tàu Lượn Song Tử
-    4151141, -- Tàu Lượn Cerberus
-    4151142, -- Tàu Lượn Ngọc Trai
-    4151143, -- Tàu Lượn Song Tử
+    4151138, -- Airborne cosmetic
+    4151139, -- Airborne cosmetic
+    4151140, -- Airborne cosmetic
+    4151141, -- Airborne cosmetic
+    4151142, -- Airborne cosmetic
+    4151143, -- Airborne cosmetic
     202408087,
     202408061,
     1102001001,
-    4152031, -- Tàu Lượn Ma Vương Huyết Hồn
-    4152035, -- Cân Đẩu Vân
+    4152031, -- Airborne cosmetic
+    4152035, -- Cosmetic item
     4152036, -- Windborne Euphony Glider
-    4152037, -- Ván Trượt Máy Dập Sóng
-    4152038, -- Ván Trượt CYCLE 5
-    4152039, -- Tàu Lượn Ngọc Trai Tuyệt Hảo
+    4152037, -- Airborne cosmetic
+    4152038, -- Airborne cosmetic
+    4152039, -- Airborne cosmetic
     4152041, -- Boxerbolt Hoverboard (Shop)
     4152042, -- Blueyonder Glider
     4152043, -- Agile Charmer Glider
@@ -1107,116 +1106,116 @@ local ITEMS = {
     4152059, -- Cloud Piercer Hoverboard (Shop)
     4152060, -- Golden Wings Glider (Shop)
     4152061, -- CYCLE 6 Skateboard (Shop)
-    4152063, -- Tàu Lượn Bond SPY×FAMILY (Cửa Hàng)
-    4152066, -- Dù Lượn Đế Vương Thần Vực (Cửa Hàng)
-    4152067, -- Tàu Lượn Kính Vạn Hoa (Cửa Hàng)
-    4152068, -- Tàu Lượn Chúa Tể Gai Độc (Cửa Hàng)
-    4152069, -- Tàu Lượn Tinh Vân Sấm Sét (Cửa Hàng)
-    4152070, -- Tàu Lượn Kỵ Binh Thần Giáp (Cửa Hàng)
-    4152076, -- Tàu Lượn Cửu Phong Thiên Tôn (Cửa Hàng)
-    4152077, -- Tàu Lượn (Cửa Hàng)
-    4152078, -- Tàu Lượn Hải Mã Sắt (Cửa Hàng)
-    4152079, -- Tàu Lượn Đôi Cánh Thế Giới Ngầm (Cửa Hàng)
-    4152080, -- Ván Trượt CYCLE 7 (Cửa Hàng)
-    4152092, -- Tàu Lượn Lam Sư Tinh Hà (Cửa Hàng)
-    4152093, -- Tàu Lượn Ngọc Lang Thiên Giới (Cửa Hàng)
-    4152094, -- Ván Trượt CYCLE 8 (Cửa Hàng)
-    4152095, -- Dù Lượn Đôi Cánh Anukhra
-    4152096, -- Dù Lượn Đôi Cánh Pharaoh
-    4152097, -- Tàu Lượn Siêu Thú Ghidorah
-    4152098, -- Dù Lượn Thời Quang Khả Biến
-    4152099, -- Dù Lượn Vương Quyền Hắc Ám
-    4152116, -- Tàu Lượn Long Thánh (Sảnh Một Người)
+    4152063, -- Airborne cosmetic
+    4152066, -- Airborne cosmetic
+    4152067, -- Airborne cosmetic
+    4152068, -- Airborne cosmetic
+    4152069, -- Airborne cosmetic
+    4152070, -- Airborne cosmetic
+    4152076, -- Airborne cosmetic
+    4152077, -- Airborne cosmetic
+    4152078, -- Airborne cosmetic
+    4152079, -- Airborne cosmetic
+    4152080, -- Airborne cosmetic
+    4152092, -- Airborne cosmetic
+    4152093, -- Airborne cosmetic
+    4152094, -- Airborne cosmetic
+    4152095, -- Airborne cosmetic
+    4152096, -- Airborne cosmetic
+    4152097, -- Airborne cosmetic
+    4152098, -- Airborne cosmetic
+    4152099, -- Airborne cosmetic
+    4152116, -- Airborne cosmetic
 
     -- ==============================================================================
-    -- 3. TRANG PHỤC (OUTFITS), X-SUIT & PHỤ KIỆN
+    -- 3. OUTFITS, X-SUITS, AND ACCESSORIES
     -- ==============================================================================
     -- [ X-SUIT ]
-    1407895, -- X-Suit Quạ Huyết (7 Sao)
-    1407856, -- X-Suit Phượng Hoàng (7 Sao)
-    1405628, -- X-Suit Pharaoh Vàng (6 Sao)
-    1406469, -- X-Suit Pharaoh Vàng (7 Sao)
-    1405870, -- X-Suit Quạ Huyết (6 Sao)
+    1407895, -- Cosmetic item
+    1407856, -- Cosmetic item
+    1405628, -- Cosmetic item
+    1406469, -- Cosmetic item
+    1405870, -- Cosmetic item
     1407140, -- X-Suit Poseidon (7 Sao)
     1407142, -- X-Suit Silvanus (7 Sao)
-    1407141, -- X-Suit Bão Tuyết (7 Sao)
-    1407550, -- X-Suit Ánh Sáng Cầu Vồng (7 Sao)
-    1406638, -- X-Suit Hề Bí Ẩn (6 Sao) [Đen]
-    1406641, -- X-Suit Hề Bí Ẩn (6 Sao) [Trắng]
-    1406872, -- X-Suit Chúa Tể Âm Ty (7 Sao)
+    1407141, -- Cosmetic item
+    1407550, -- Cosmetic item
+    1406638, -- Cosmetic item
+    1406641, -- Cosmetic item
+    1406872, -- Cosmetic item
     1406971, -- X-Suit Marmoris (7 Sao)
     1407103, -- X-Suit Fiore (7 Sao)
     1407219, -- X-Suit Ignis (7 Sao)
     1407366, -- X-Suit Galadria (7 Sao)
     1407512, -- X-Suit Anukhra (7 Sao)
     1407625, -- X-Suit Dravion (7 Sao) [Nam]
-    1407667, -- X-Suit Dravion (7 Sao) [Nữ]
+    1407667, -- Cosmetic item
 
     -- [ OUTFITS ]
-    1407870, -- Bộ Nữ Thần Không Gian
-    1407871, -- Bộ Thám Tử Đa Vũ Trụ
-    1407812, -- Bộ Vệ Binh Hoang Dã
-    1407758, -- Bộ Tiên Nữ Mùa Đông
-    1407286, -- Bộ Mèo Cyber Tinh Nghịch
-    1407329, -- Bộ Ánh Sáng Tĩnh Lặng
-    1407391, -- Bộ Nữ Bá Tước Ma Cà Rồng
-    1407392, -- Bộ Kẻ Phá Hoại Man Rợ
-    1407387, -- Bộ Tử Thần Tận Thế
-    1407440, -- Bộ Kẻ Chinh Phục Bắc Cực
-    1406985, -- Bộ Người Tình Bãi Biển
-    1407470, -- Bộ Thiên Thần Nổi Loạn
-    1407471, -- Bộ Cực Quang Nanh Ngọc
-    1407522, -- Bộ Hậu Duệ Tiên Cát
-    1407330, -- Bộ Đô Đốc Bóng Ma
-    1407523, -- Bộ Uy Quyền Tà Ác
-    1407558, -- Bộ Thái Dương Thăng Hoa
-    1407559, -- Bộ Ánh Sáng Nguyệt Cung
-    1407572, -- Bộ Huyết Dạ Hoàng Hôn
-    1407682, -- Bộ Kén Ẩn Sĩ
-    1407695, -- Bộ Lễ Tình Nhân Rùng Rợn
-    1407696, -- Bộ Lăng Kính Thăng Hoa
-    1407632, -- Bộ Hắc Dạ Tà Ác
-    1407573, -- Bộ Bóng Ma Điện Tử
-    1406398, -- Bộ Bóng Ma Rực Lửa
-    1406399, -- Bộ Kỵ Binh Oai Vệ
-    1406482, -- Bộ Chúa Tể Gai Góc
-    1406483, -- Bộ Tinh Vân Sấm Sét
-    1406555, -- Bộ Khuôn Mặt Địa Ngục
-    1406573, -- Bộ Thiên Nga Bóng Ma
-    1406574, -- Bộ Quan Tòa Vũ Trụ
-    1406656, -- Bộ Trưa Đẫm Máu
-    1406657, -- Bộ Đô Đốc Biển Sao
-    1406742, -- Bộ Đạo Sư Bạc
-    1406744, -- Bộ Hiệp Sĩ Thái Dương
-    1406789, -- Bộ Bóng Ma Địa Ngục
-    1406823, -- Bộ Giọt Nguyệt Bất Diệt
-    1406824, -- Bộ Kẻ Thù Nhuốm Máu
-    1406897, -- Bộ Ác Mộng Đỏ Thẫm
-    1407277, -- Trang Phục Hỏa Thần Cổ Ngữ
-    1406891, -- Trang Phục Linh Hồn Xác Ướp
-    1405623, -- Bộ Xác Ướp Vàng
-    1400687, -- Bộ Xác Ướp Trắng
-    1407618, -- Bộ Thực Hồn Bắc Cực (Polar Spectrophage)
+    1407870, -- Cosmetic item
+    1407871, -- Cosmetic item
+    1407812, -- Cosmetic item
+    1407758, -- Cosmetic item
+    1407286, -- Cosmetic item
+    1407329, -- Cosmetic item
+    1407391, -- Cosmetic item
+    1407392, -- Cosmetic item
+    1407387, -- Cosmetic item
+    1407440, -- Cosmetic item
+    1406985, -- Cosmetic item
+    1407470, -- Cosmetic item
+    1407471, -- Cosmetic item
+    1407522, -- Cosmetic item
+    1407330, -- Cosmetic item
+    1407523, -- Cosmetic item
+    1407558, -- Cosmetic item
+    1407559, -- Cosmetic item
+    1407572, -- Cosmetic item
+    1407682, -- Cosmetic item
+    1407695, -- Cosmetic item
+    1407696, -- Cosmetic item
+    1407632, -- Cosmetic item
+    1407573, -- Cosmetic item
+    1406398, -- Cosmetic item
+    1406399, -- Cosmetic item
+    1406482, -- Cosmetic item
+    1406483, -- Cosmetic item
+    1406555, -- Cosmetic item
+    1406573, -- Cosmetic item
+    1406574, -- Cosmetic item
+    1406656, -- Cosmetic item
+    1406657, -- Cosmetic item
+    1406742, -- Cosmetic item
+    1406744, -- Cosmetic item
+    1406789, -- Cosmetic item
+    1406823, -- Cosmetic item
+    1406824, -- Cosmetic item
+    1406897, -- Cosmetic item
+    1407277, -- Outfit cosmetic
+    1406891, -- Outfit cosmetic
+    1405623, -- Cosmetic item
+    1400687, -- Cosmetic item
+    1407618, -- Cosmetic item
 
     -- [ Dragon Ball Super Collab ]
-    1406937, -- Trang Phục Nhân Vật Super Saiyan Son Goku
-    1406938, -- Trang Phục Nhân Vật Frieza
-    1406939, -- Trang Phục Nhân Vật Son Goku
-    1406947, -- Trang Phục Nhân Vật Vegeta
-    1406948, -- Trang Phục Nhân Vật Super Saiyan Vegeta
-    1406950, -- Trang Phục Beerus
-    1406951, -- Trang Phục Ma Bư
-    1406952, -- Trang Phục Quy Lão Kame
-    1406953, -- Trang Phục Nhân Vật Gohan Siêu Cấp
-    1406954, -- Trang Phục Nhân Vật Piccolo
-    1407264, -- Trang Phục Nhân Vật Vegito
-    1407265, -- Trang Phục Nhân Vật Vegito Siêu Saiyan
-    1407266, -- Trang Phục Nhân Vật Vegito Siêu Saiyan Xanh
-    1407267, -- Trang Phục Nhân Vật Son Goku Siêu Saiyan Xanh
-    1407268, -- Trang Phục Nhân Vật Son Goku Siêu Saiyan Xanh (Bị Thương)
-    1407269, -- Trang Phục Nhân Vật Vegeta Super Saiyan Xanh
-    1407270, -- Trang Phục Nhân Vật Vegeta Siêu Saiyan Xanh (Bị Thương)
-    1407271, -- Trang Phục Nhân Vật Bulma
+    1406937, -- Outfit cosmetic
+    1406938, -- Outfit cosmetic
+    1406939, -- Outfit cosmetic
+    1406947, -- Outfit cosmetic
+    1406948, -- Outfit cosmetic
+    1406950, -- Outfit cosmetic
+    1406951, -- Outfit cosmetic
+    1406952, -- Outfit cosmetic
+    1406953, -- Outfit cosmetic
+    1406954, -- Outfit cosmetic
+    1407264, -- Outfit cosmetic
+    1407265, -- Outfit cosmetic
+    1407266, -- Outfit cosmetic
+    1407267, -- Outfit cosmetic
+    1407268, -- Outfit cosmetic
+    1407269, -- Outfit cosmetic
+    1407270, -- Outfit cosmetic
+    1407271, -- Outfit cosmetic
 
     -- [ Evangelion Collab ]
     1406385, -- Plugsuit Evangelion Shinji
@@ -1226,63 +1225,63 @@ local ITEMS = {
     1406389, -- Plugsuit Evangelion Kaworu
 
     -- [ Attack on Titan Collab ]
-    1407563, -- Trang Phục Nhân Vật Eren Jaeger
-    1407565, -- Trang Phục Nhân Vật Mikasa Ackermann
-    1407566, -- Trang Phục Nhân Vật Armin Arlelt
-    1407567, -- Trang Phục Titan Khổng Lồ (Armin)
-    1407568, -- Trang Phục Nhân Vật Levi
-    1407569, -- Trang Phục Titan Bọc Thép
+    1407563, -- Outfit cosmetic
+    1407565, -- Outfit cosmetic
+    1407566, -- Outfit cosmetic
+    1407567, -- Outfit cosmetic
+    1407568, -- Outfit cosmetic
+    1407569, -- Outfit cosmetic
 
     -- [ Kaiju No. 8 Collab ]
-    1407672, -- Trang Phục Nhân Vật Kafka Hibino
-    1407673, -- Trang Phục Kaiju No. 8
-    1407674, -- Trang Phục Nhân Vật Kikoru Shinomiya
-    1407675, -- Trang Phục Kaiju No. 9
-    1407676, -- Trang Phục Kaiju No. 10
-    1407677, -- Trang Phục Nhân Vật Mina Ashiro
-    1407678, -- Trang Phục Nhân Vật Reno Ichikawa
-    1407679, -- Trang Phục Nhân Vật Soshiro Hoshina
+    1407672, -- Outfit cosmetic
+    1407673, -- Outfit cosmetic
+    1407674, -- Outfit cosmetic
+    1407675, -- Outfit cosmetic
+    1407676, -- Outfit cosmetic
+    1407677, -- Outfit cosmetic
+    1407678, -- Outfit cosmetic
+    1407679, -- Outfit cosmetic
 
     -- [ BlackPink & Kpop Collabs ]
-    1406132, -- Trang phục DDU-DU DDU-DU ROSÉ
-    1406133, -- Trang phục DDU-DU DDU-DU JENNIE
-    1406134, -- Trang phục DDU-DU DDU-DU JISOO
-    1406135, -- Trang phục DDU-DU DDU-DU LISA
-    1406161, -- Trang phục How You Like That ROSÉ
-    1406162, -- Trang phục How You Like That JENNIE
-    1406163, -- Trang phục How You Like That JISOO 
-    1406164, -- Trang phục How You Like That LISA
-    1406178, -- Trang phục Lovesick Girls ROSÉ
-    1406179, -- Trang phục Lovesick Girls JENNIE
-    1406180, -- Trang phục Lovesick Girls JISOO
-    1406181, -- Trang phục Lovesick Girls LISA
+    1406132, -- Outfit cosmetic
+    1406133, -- Outfit cosmetic
+    1406134, -- Outfit cosmetic
+    1406135, -- Outfit cosmetic
+    1406161, -- Outfit cosmetic
+    1406162, -- Outfit cosmetic
+    1406163, -- Outfit cosmetic
+    1406164, -- Outfit cosmetic
+    1406178, -- Outfit cosmetic
+    1406179, -- Outfit cosmetic
+    1406180, -- Outfit cosmetic
+    1406181, -- Outfit cosmetic
     1407346, -- PUBGM X NewJeans MINJI Set
     1407347, -- PUBGM X NewJeans HANNI Set
     1407348, -- PUBGM X NewJeans HAERIN Set
     1407349, -- PUBGM X NewJeans DANIELLE Set
     1407350, -- PUBGM X NewJeans HYEIN Set
-    1407745, -- Trang Phục RAMI (Babymonster)
-    1407746, -- Trang Phục ASA (Babymonster)
-    1407747, -- Trang Phục AHYEON (Babymonster)
-    1407748, -- Trang Phục RORA (Babymonster)
-    1407749, -- Trang Phục CHIQUITA (Babymonster)
-    1407750, -- Trang Phục PHARITA (Babymonster)
-    1407751, -- Trang Phục RUKA (Babymonster)
-    1407826, -- Trang Phục PUBG MOBILE × aespa KARINA
-    1407827, -- Trang Phục PUBG MOBILE × aespa GISELLE
-    1407828, -- Trang Phục PUBG MOBILE × aespa WINTER
-    1407829, -- Trang Phục PUBG MOBILE × aespa NINGNING
-    1407687, -- Trang Phục G-DRAGON PEACEMINUSONE
-    1407688, -- Trang Phục Sân Khấu của G-DRAGON
+    1407745, -- Outfit cosmetic
+    1407746, -- Outfit cosmetic
+    1407747, -- Outfit cosmetic
+    1407748, -- Outfit cosmetic
+    1407749, -- Outfit cosmetic
+    1407750, -- Outfit cosmetic
+    1407751, -- Outfit cosmetic
+    1407826, -- Outfit cosmetic
+    1407827, -- Outfit cosmetic
+    1407828, -- Outfit cosmetic
+    1407829, -- Outfit cosmetic
+    1407687, -- Outfit cosmetic
+    1407688, -- Outfit cosmetic
 
-    -- [ CÁC COLLAB NỔI BẬT KHÁC (Messi, Lý Tiểu Long, SPYxFAMILY...) ]
-    1406648, -- Trang Phục Biểu Tượng Bóng Đá Messi
-    1406649, -- Trang Phục Huyền Thoại Siêu Sao Messi
-    1406728, -- Trang Phục Kung Fu Lý Tiểu Long
-    1406729, -- Trang Phục Chuyên Gia Cận Chiến Lý Tiểu Long
-    1406730, -- Trang Phục Rồng Gầm Lý Tiểu Long
-    1406731, -- Trang Phục Võ Sĩ Lý Tiểu Long
-    1407206, -- SPY×FAMILY Trang Phục Hoàng Hôn
+    -- [ OTHER MAJOR COLLABORATIONS (Messi, Bruce Lee, SPYxFAMILY...) ]
+    1406648, -- Outfit cosmetic
+    1406649, -- Outfit cosmetic
+    1406728, -- Outfit cosmetic
+    1406729, -- Outfit cosmetic
+    1406730, -- Outfit cosmetic
+    1406731, -- Outfit cosmetic
+    1407206, -- Outfit cosmetic
     1407401, -- C.C. Set
     1407402, -- Kallen Kozuki Set
     1407404, -- Suzaku Kururugi Set
@@ -1293,35 +1292,35 @@ local ITEMS = {
     1407771, -- Momo Set
     1407772, -- Jiji(transformed) Set
     1407773, -- Aira Set
-    1407794, -- Trang Phục Nhân Vật John Shelby
-    1407795, -- Trang Phục Nhân Vật Arthur Shelby
-    1407796, -- Trang phục Thomas Shelby
-    1407798, -- Trang Phục Nhân Vật Iori Yagami
-    1407800, -- Trang Phục Nhân Vật Mai Shiranui
-    1407801, -- Trang Phục Nhân Vật Nakoruru
-    1407846, -- Trang Phục Nhân Vật Kimono Ryomen Sukuna
-    1407848, -- Trang Phục Nhân Vật Suguru Geto
-    1407901, -- Trang Phục Nhân Vật Isagi Yoichi
-    1407902, -- Trang Phục Nhân Vật Bachira Meguru
+    1407794, -- Outfit cosmetic
+    1407795, -- Outfit cosmetic
+    1407796, -- Outfit cosmetic
+    1407798, -- Outfit cosmetic
+    1407800, -- Outfit cosmetic
+    1407801, -- Outfit cosmetic
+    1407846, -- Outfit cosmetic
+    1407848, -- Outfit cosmetic
+    1407901, -- Outfit cosmetic
+    1407902, -- Outfit cosmetic
 
-    -- [ Set Đồ Đỏ Tự Nhiên & Siêu VIP của Game ]
-    1405160, -- Huyền Thoại Godzilla
-    1405161, -- Siêu Thú Ghidorah
-    1405186, -- Bộ Đồ Godzilla
-    1405662, -- Trang phục Giáp Samurai
-    1405663, -- Trang phục Sát Thủ Bóng Đêm
-    1406020, -- Trang phục Quái Thú
-    1406398, -- Trang phục Hỏa Diệm Ma Giáp
-    1406399, -- Trang phục Kỵ Binh Thần Giáp
-    1406456, -- Trang Phục Anh Hùng Truyền Thuyết
-    1406568, -- Trang Phục Nữ Hoàng Bóng Đêm
-    1406569, -- Trang Phục Minh Vương Hành Quyết
-    1406732, -- Trang Phục Nữ Đế Hoàng Kim
-    1406733, -- Trang Phục Hoàng Đế Hoàng Kim
-    1406764, -- Trang Phục Thiếu Nữ Đỏ Rực
+    -- [ Rare red outfits and premium in-game sets ]
+    1405160, -- Cosmetic item
+    1405161, -- Cosmetic item
+    1405186, -- Cosmetic item
+    1405662, -- Outfit cosmetic
+    1405663, -- Outfit cosmetic
+    1406020, -- Outfit cosmetic
+    1406398, -- Outfit cosmetic
+    1406399, -- Outfit cosmetic
+    1406456, -- Outfit cosmetic
+    1406568, -- Outfit cosmetic
+    1406569, -- Outfit cosmetic
+    1406732, -- Outfit cosmetic
+    1406733, -- Outfit cosmetic
+    1406764, -- Outfit cosmetic
 
     -- ==============================================================================
-    -- 4. ÁO, QUẦN, GIÀY ĐẸP & TDM (PHONG CÁCH CỰC CHẤT)
+    -- 4. SHIRTS, PANTS, SHOES, AND TDM OUTFITS (PREMIUM STYLES)
     -- ==============================================================================
     -- [ BAPE & ALAN WALKER ]
     1400569, -- BAPE MIX CAMO HOODIE
@@ -1330,221 +1329,181 @@ local ITEMS = {
     1404000, -- BAPE City Camo Hoodie
     1404002, -- BAPE City Camo Pants
     1404003, -- BAPE Sta Mid
-    1404048, -- Áo BAPE X PUBGM CAMO
-    1404049, -- Áo Hoodie cá mập BAPE X PUBGM CAMO
-    1404050, -- Quần BAPE X PUBGM CAMO
-    1404051, -- Giày BAPE X PUBGM CAMO
+    1404048, -- Outfit cosmetic
+    1404049, -- Outfit cosmetic
+    1404050, -- Outfit cosmetic
+    1404051, -- Outfit cosmetic
     1404016, -- Alan Walker T-shirt
     1404017, -- Alan Walker Hoodie
-    1404042, -- Trang phục Alan Walker
-    1404043, -- Áo Alan Walker
-    1404044, -- Quần Alan Walker
-    1404045, -- Giày Alan Walker
-    1404340, -- Trang phục Alan Walker 2021
+    1404042, -- Outfit cosmetic
+    1404043, -- Outfit cosmetic
+    1404044, -- Outfit cosmetic
+    1404045, -- Outfit cosmetic
+    1404340, -- Outfit cosmetic
     1403038, -- Alan Walker Mask
-    1403064, -- Khẩu trang Alan Walker
+    1403064, -- Cosmetic item
 
-    -- [ Đồ TDM Phổ Biến (Khăn bịt mặt, Áo Lính, Áo Khoác Đen...) ]
-    402001, -- Khăn rằn sinh tồn
-    402037, -- Khăn quàng cao bồi
-    402043, -- Khăn quàng PUBG (Đỏ-Đen)
-    402045, -- Khăn quàng PUBG (Chiến thuật)
-    1400158, -- Mặt Nạ Hockey
+    -- [ Popular TDM items (face coverings, military shirts, black jackets...) ]
+    402001, -- Cosmetic item
+    402037, -- Cosmetic item
+    402043, -- Cosmetic item
+    402045, -- Cosmetic item
+    1400158, -- Cosmetic item
     1402005, -- Mysterious Leather Mask
-    1403100, -- Mặt nạ người leo núi
-    403010, -- Áo Ba Lỗ Bẩn (Trắng)
-    403028, -- Áo Trench coat (Màu đen)
-    403181, -- Áo lính sa mạc
-    403182, -- Áo Hoodie săn mồi (Đen)
-    403183, -- Áo Hoodie biệt kích (Trắng)
-    403192, -- Áo khoác bomber
-    404006, -- Quần Jeans (Nâu)
-    404008, -- Quần lính (Ka-ki)
-    404013, -- Quần lính (Rằn ri)
-    404015, -- Quần Jeans Bó (Màu Lam)
-    404026, -- Quần túi hộp (Màu be)
-    404028, -- Quần túi hộp (Màu đen)
-    404084, -- Quần thể thao ngắn (Đen)
-    404100, -- Quần người ẩn nấp (Đen)
-    405001, -- Giày đế mềm (Màu trắng)
-    405002, -- Giày thể thao cổ cao
-    405019, -- Giày lính chim ưng (Đen)
-    405044, -- Giày đế mềm (Đen)
-    1400013, -- Quần Jeans Mỹ
+    1403100, -- Cosmetic item
+    403010, -- Outfit cosmetic
+    403028, -- Outfit cosmetic
+    403181, -- Outfit cosmetic
+    403182, -- Outfit cosmetic
+    403183, -- Outfit cosmetic
+    403192, -- Outfit cosmetic
+    404006, -- Outfit cosmetic
+    404008, -- Outfit cosmetic
+    404013, -- Outfit cosmetic
+    404015, -- Outfit cosmetic
+    404026, -- Outfit cosmetic
+    404028, -- Outfit cosmetic
+    404084, -- Outfit cosmetic
+    404100, -- Outfit cosmetic
+    405001, -- Outfit cosmetic
+    405002, -- Outfit cosmetic
+    405019, -- Outfit cosmetic
+    405044, -- Outfit cosmetic
+    1400013, -- Outfit cosmetic
 
-    -- [ CÁC ÁO LẺ VIP (Collab, Siêu Xe) ]
-    1404142, -- Áo thun THE WALKING DEAD (Trắng)
-    1404143, -- Áo thun THE WALKING DEAD (Đen)
-    1404218, -- Áo Hoodie COVERNAT (Trắng)
-    1404219, -- Áo Hoodie COVERNAT (Đen)
-    1404326, -- Áo thun Xiaomi
-    1404327, -- Áo thun OnePlus
-    1404405, -- Áo Đấu Hợp Tác Messi × PUBG MOBILE
-    1404406, -- Áo Thun Lý Tiểu Long
+    -- [ INDIVIDUAL VIP TOPS (COLLABORATIONS, SUPERCARS) ]
+    1404142, -- Outfit cosmetic
+    1404143, -- Outfit cosmetic
+    1404218, -- Outfit cosmetic
+    1404219, -- Outfit cosmetic
+    1404326, -- Outfit cosmetic
+    1404327, -- Outfit cosmetic
+    1404405, -- Outfit cosmetic
+    1404406, -- Outfit cosmetic
     1404411, -- Hoodie Ducati
-    1404412, -- Giày Ducati Corse City C2
-    1404413, -- Quần Ducati Sport C2
-    1404414, -- Áo Khoác Ducati Speed Evo C2
-    1404426, -- Áo PMGC 2023
-    1404427, -- Quần Người Chinh Phục Pagani
-    1404428, -- Giày Người Chinh Phục Pagani
-    1404508, -- Áo Hoodie Mr.Beast
-    1400324, -- áo b
-    1400325, -- áo a
-    452001, 452002, 452003, -- Găng Tay (Gloves)
-    
-        -- [ HÀNH ĐỘNG ]
-    12201301, -- Hành động Sát thủ Gothic
-    12216101, -- Hành động Võ sĩ Huyết Ưng
-    12212201, -- Hành động Sát thủ Cực Ám
-    12219207, -- Hành động Đại tướng Thiên Ngưu
-    12209001, -- Hành động Võ sĩ (Samurai)
-    12219561, -- Hành động Áo choàng Đỏ thẫm
-    12210001, -- Hành động Cái chạm của Tử thần
-    12219022, -- Hành động Thiết vệ Gai góc
-    12208801, -- Hành động Dũng sĩ Bán thần
-    12210801, -- Hành động Thợ săn Vỏ bạc
-    12200701, -- Hành động Du hành Không thời gian
-    12219242, -- Hành động Dạo bước Bầu trời
-    12206001, -- Hành động Hoa linh Đồng xanh
-    12205401, -- Hành động Vua của muôn thú
-    12205201, -- Hành động Trái tim Cự thú
-    12212601, -- Hành động Sát lục Thần bí
-    12205601, -- Hành động Linh hồn Cự thú
-    12219208, -- Hành động Hầu vương Cyber
-    12212001, -- Hành động Võ thánh
-    12206801, -- Hành động Hải long Thần bí
-    12209801, -- Hành động Ngự linh sư
-    12211401, -- Hành động Nữ phù thủy Băng tuyết
-    12207001, -- Hành động Du hành Biển sao
-    12211801, -- Hành động Chúa tể Trật tự
-    12207901, -- Hành động Hải vương Quyến rũ
-    12203401, -- Hành động Kỷ niệm Ảo ảnh
-    12204001, -- Hành động Chú hề (Ngày Cá tháng Tư)
-    12201801, -- Hành động Người bảo vệ Vùng tuyết
-    12215601, -- Hành động Siêu nhân Hằng tinh
-    12215532, -- Hành động Lãnh chúa Ngọn lửa
-    12213201, -- Hành động Kế hoạch Ngày mai
-    12215529, -- Hành động Kỵ sĩ Đua xe
-    12219053, -- Hành động Nữ hoàng Trân bảo
-    12204601, -- Hành động Thiên hạ Bố võ
-    12215701, -- Hành động Hành tinh Vượn người
-    12219003, -- Hành động Bóng tối Thần linh
-    12219004, -- Hành động Ngân hồn Rực lửa
-    12219009, -- Hành động Mê hoặc Rực lửa
-    12219216, -- Hành động Tế tư Héo úa
+    1404412, -- Outfit cosmetic
+    1404413, -- Outfit cosmetic
+    1404414, -- Outfit cosmetic
+    1404426, -- Outfit cosmetic
+    1404427, -- Outfit cosmetic
+    1404428, -- Outfit cosmetic
+    1404508, -- Outfit cosmetic
+    1400324, -- Outfit cosmetic
+    1400325, -- Outfit cosmetic
+    452001, 452002, 452003, -- Cosmetic item
     
     
-    -- tóc mặt tùm lum
+    
+    -- Miscellaneous hair and face items
     1404198, 1410085, 1404366, 1403137, 1410480, 1403028, 1400158, 40605011, 1404323, 1406001, 1403002,
 
 -- ==============================================================================
-    -- MŨ GIÁP VIP (CHỈ LẤY CẤP 1 - GỌN GÀNG, DỄ ẨN NẤP)
+    -- VIP HELMETS (LEVEL 1 ONLY - COMPACT AND EASY TO CONCEAL)
     -- ==============================================================================
     1502001183, -- Godzilla Helmet (Lv. 1)
-    1502001194, -- Mũ MECHAGODZILLA (Cấp 1)
-    1502001093, -- Mũ Thẩm Phán Anubis (Cấp 1) - Pharaoh
-    1502001305, -- Mũ Giáp Siêu Nhân Thép (Cấp 1)
-    1502001320, -- Mũ Giáp Biểu Tượng Bóng Đá Messi (Cấp 1)
-    1502001105, -- Mũ Tàng Hình (Cấp 1)
-    1502001364, -- Mũ Giáp PMGC 2023 (Cấp 1)
-    1502001373, -- Mũ Giáp LINE FRIENDS BROWN (Cấp 1)
+    1502001194, -- Helmet cosmetic (Level 1)
+    1502001093, -- Helmet cosmetic (Level 1)
+    1502001305, -- Helmet cosmetic (Level 1)
+    1502001320, -- Helmet cosmetic (Level 1)
+    1502001105, -- Helmet cosmetic (Level 1)
+    1502001364, -- Helmet cosmetic (Level 1)
+    1502001373, -- Helmet cosmetic (Level 1)
     1502001402, -- APEACH Helmet (LV.1)
     1502001403, -- Bellygom Helmet (LV.1)
     1502001427, -- Opanchu Helmet (Lv.1)
-    1502001443, -- Mũ Giáp Sóng Âm Cuồng Loạn (Cấp 1)
-    1502001450, -- Mũ Giáp Cún Tinh Nghịch (Cấp 1)
+    1502001443, -- Helmet cosmetic (Level 1)
+    1502001450, -- Helmet cosmetic (Level 1)
     1502001471, -- Turbo Granny (Beckoning cat) Helmet (Lv. 1)
-    1502001480, -- Mũ Giáp PUBG MOBILE × aespa (Cấp 1)
+    1502001480, -- Helmet cosmetic (Level 1)
     1502001490, -- Nakiri Ayame Helmet (Lv.1)
-    1502001495, -- Mũ BLUE LOCK (Cấp 1)
-    1502001001, -- Mũ pizza nóng (Cấp 1)
-    1502001004, -- Mũ Cyberpunk (Tím) (Cấp 1)
-    1502001005, -- Mũ hộp sọ (Cấp 1)
-    1502001046, -- Mũ Samurai - danh dự (Cấp 1)
-    1502001058, -- Mũ bảo hiểm Monarch (Cấp 1)
-    1502001064, -- Mũ bảo hiểm Thiên Sứ (Cấp 1)
-    1502001073, -- Mũ Vệ Binh Robot (Cấp 1)
-    1502001078, -- Mũ Ninja Sát Thủ (Cấp 1)
-    1502001086, -- Mũ Chuột Tinh Nghịch (Cấp 1)
-    1502001099, -- Mũ Corgi (Cấp 1)
-    1502001115, -- Mũ Bọ Rùa (Cấp 1)
-    1502001133, -- Mũ Bí Ngô Kinh Dị (Cấp 1)
-    1502001145, -- Mũ Chú Lính Chì (Cấp 1)
-    1502001154, -- Mũ Giáp Đại Bàng Tỏa Sáng (Cấp 1)
-    1502001175, -- Mũ Vịt Vàng B.Duck (Cấp 1)
-    1502001230, -- Mũ Rồng Công Nghệ (Cấp 1)
-    1502001248, -- Mũ Người Mở Đường (Cấp 1)
-    1502001264, -- Mũ Ét Ô Ét (Cấp 1)
-    1502001276, -- Mũ Vũ Công Bí Ẩn (Cấp 1)
-    1502001294, -- Mũ Giáp Ma Pháp Sư (Cấp 1)
-    1502001301, -- Mũ Giáp Archon Lừng Lẫy (Cấp 1)
-    1502001357, -- Mũ Giáp Son Goku (Cấp 1)
-    1502001381, -- Mũ Giáp Hỏa Linh Chí Tôn (Cấp 1)
-    1502001416, -- Mũ Giáp PMGC 2024 (Cấp 1)
+    1502001495, -- Helmet cosmetic (Level 1)
+    1502001001, -- Helmet cosmetic (Level 1)
+    1502001004, -- Helmet cosmetic (Level 1)
+    1502001005, -- Helmet cosmetic (Level 1)
+    1502001046, -- Helmet cosmetic (Level 1)
+    1502001058, -- Helmet cosmetic (Level 1)
+    1502001064, -- Helmet cosmetic (Level 1)
+    1502001073, -- Helmet cosmetic (Level 1)
+    1502001078, -- Helmet cosmetic (Level 1)
+    1502001086, -- Helmet cosmetic (Level 1)
+    1502001099, -- Helmet cosmetic (Level 1)
+    1502001115, -- Helmet cosmetic (Level 1)
+    1502001133, -- Helmet cosmetic (Level 1)
+    1502001145, -- Helmet cosmetic (Level 1)
+    1502001154, -- Helmet cosmetic (Level 1)
+    1502001175, -- Helmet cosmetic (Level 1)
+    1502001230, -- Helmet cosmetic (Level 1)
+    1502001248, -- Helmet cosmetic (Level 1)
+    1502001264, -- Helmet cosmetic (Level 1)
+    1502001276, -- Helmet cosmetic (Level 1)
+    1502001294, -- Helmet cosmetic (Level 1)
+    1502001301, -- Helmet cosmetic (Level 1)
+    1502001357, -- Helmet cosmetic (Level 1)
+    1502001381, -- Helmet cosmetic (Level 1)
+    1502001416, -- Helmet cosmetic (Level 1)
     1502001453, -- 2025 Esports Helmet (Lv. 1)
 
     -- ==============================================================================
-    -- BA LÔ VIP (CHỈ LẤY CẤP 1 - GỌN GÀNG, DỄ ẨN NẤP)
+    -- VIP BACKPACKS (LEVEL 1 ONLY - COMPACT AND EASY TO CONCEAL)
     -- ==============================================================================
-    1501001174, -- Ba lô Pharaoh (Cấp 1)
-    1501001220, -- Ba lô Huyết Nha (Cấp 1)
-    1501001265, -- Ba lô Poseidon (Cấp 1)
-    1501001548, -- Balo Thần Thoại Viễn Cổ (Cấp 1)
-    1501001559, -- Balo Thanh Hoa Xà (Cấp 1)
-    1501001567, -- Ba Lô Hỏa Linh Chí Tôn (Cấp 1)
-    1501001577, -- Balo Đôi Cánh Vệ Thần (Cấp 1)
-    1501001607, -- Balo Dơi Bóng Đêm (Cấp 1)
-    1501001061, -- Ba lô Godzilla (Cấp 1)
-    1501001062, -- Ba Lô Siêu Thú Ghidorah (Cấp 1)
-    1501001082, -- Ba lô Genbu (Cấp 1)
-    1501001112, -- Ba lô Pig Ngốc Nghếch (Cấp 1)
-    1501001133, -- Ba lô Joker Khát Máu (Cấp 1)
-    1501001243, -- Ba Lô Vịt Vàng B.Duck (Cấp 1)
-    1501001273, -- Ba lô MECHAGODZILLA (Cấp 1)
-    1501001304, -- Ba lô Ma Vương (Cấp 1)
-    1501001331, -- Ba lô của Jinx (Cấp 1)
-    1501001340, -- Ba Lô Hải Cẩu Tuyết (Cấp 1)
-    1501001376, -- Ba lô Máy Hát Cổ Điển (Cấp 1)
-    1501001400, -- Ba lô Baby Shark (Cấp 1)
-    1501001463, -- Ba Lô BoBoiBoy (Cấp 1)
-    1501001476, -- Ba Lô Biểu Tượng Bóng Đá Messi (Cấp 1)
-    1501001480, -- Ba Lô Mì Indomie (Cấp 1)
-    1501001487, -- Ba Lô Con Mắt Chết Chóc (Cấp 1)
-    1501001521, -- Ba Lô Quy Lão Kame (Cấp 1)
-    1501001539, -- Ba Lô PMGC 2023 (Cấp 1)
-    1501001540, -- Ba Lô Gà Rán KFC (Cấp 1)
-    1501001554, -- Ba Lô LINE FRIENDS SALLY (Cấp 1)
-    1501001587, -- Ba Lô Đại Úy Loạn Thế (Cấp 1)
+    1501001174, -- Backpack cosmetic (Level 1)
+    1501001220, -- Backpack cosmetic (Level 1)
+    1501001265, -- Backpack cosmetic (Level 1)
+    1501001548, -- Backpack cosmetic (Level 1)
+    1501001559, -- Backpack cosmetic (Level 1)
+    1501001567, -- Cosmetic item (Level 1)
+    1501001577, -- Backpack cosmetic (Level 1)
+    1501001607, -- Backpack cosmetic (Level 1)
+    1501001061, -- Backpack cosmetic (Level 1)
+    1501001062, -- Cosmetic item (Level 1)
+    1501001082, -- Backpack cosmetic (Level 1)
+    1501001112, -- Backpack cosmetic (Level 1)
+    1501001133, -- Backpack cosmetic (Level 1)
+    1501001243, -- Cosmetic item (Level 1)
+    1501001273, -- Backpack cosmetic (Level 1)
+    1501001304, -- Backpack cosmetic (Level 1)
+    1501001331, -- Backpack cosmetic (Level 1)
+    1501001340, -- Cosmetic item (Level 1)
+    1501001376, -- Backpack cosmetic (Level 1)
+    1501001400, -- Backpack cosmetic (Level 1)
+    1501001463, -- Cosmetic item (Level 1)
+    1501001476, -- Cosmetic item (Level 1)
+    1501001480, -- Cosmetic item (Level 1)
+    1501001487, -- Cosmetic item (Level 1)
+    1501001521, -- Cosmetic item (Level 1)
+    1501001539, -- Cosmetic item (Level 1)
+    1501001540, -- Cosmetic item (Level 1)
+    1501001554, -- Cosmetic item (Level 1)
+    1501001587, -- Cosmetic item (Level 1)
     1501001597, -- Bellygom Backpack (LV.1)
     1501001632, -- Opanchu Backpack (Lv.1)
     1501001643, -- Frieren&Mimic Backbag (Lv.1)
-    1501001650, -- Ba Lô Titan Khổng Lồ Cấp 1
-    1501001683, -- Ba Lô Balenciaga (Cấp 1)
+    1501001650, -- Cosmetic item (Level 1)
+    1501001683, -- Cosmetic item (Level 1)
     1501001715, -- SAKAMOTO TARO Backpack (Lv.1)
-    1501001720, -- Ba Lô BLUE LOCK (Cấp 1)
+    1501001720, -- Cosmetic item (Level 1)
     
-        -- [ BALO, MŨ & DÙ LƯỢN ]
-    1501001024, -- Balo Bá Tước
-    1502001014, -- Mũ Đinh
-    1502001439, -- mũ vương miện
-    1502001069, -- mũ cương thi
-    1502001023, -- mũ băng
+        -- [ BACKPACKS, HELMETS, AND GLIDERS ]
+    1501001024, -- Backpack cosmetic
+    1502001014, -- Helmet cosmetic
+    1502001439, -- Helmet cosmetic
+    1502001069, -- Helmet cosmetic
+    1502001023, -- Helmet cosmetic
     
 
     
-    -- id bổ xung
-    1400092, 1400101, 1400122, --tư lệnh
-    1404191, -- quần bộ hành
+    -- Additional IDs
+    1400092, 1400101, 1400122, -- Cosmetic item
+    1404191, -- Outfit cosmetic
     1405128, 1405129, 140224445, 140224445, -- crew
-    1407961, 1407962, 1407963, 1407964, 1407965, 1407966, 1407967, 1407968, 1407969, 1407970, 1407971, 1502001508, 1502002508, 1502003508, 1411134, 1411133, 1411135, 1403771, 1403770, 1407994, 1407993, 1101006106, 1101006098, 4151145, 1903230, 1903231, 1903232, 1908117, 1908118, 1908119, 19116002, 19116003, 19116004, 1961070, 1961071, 1961072, 1961073, 1408045, 1408038, 1407990,1407922, -- Trang Phục Nữ Thần Ái Tình
-    1407704, -- Trang Phục Cô Dâu Tinh Quái
-    1400782, -- Trang phục băng tuyết
-    1407614, -- Trang Phục Optimus Prime Transformers
-    1407276, -- Trang Phục Vệ Thần Tình Ái
-    1410356, -- Mặt Nạ Ma Vương Huyết Hồn
-    40605012, -- Tóc Hai Chùm
-    401035, -- Mũ cao bồi (Trắng)
+    1407961, 1407962, 1407963, 1407964, 1407965, 1407966, 1407967, 1407968, 1407969, 1407970, 1407971, 1502001508, 1502002508, 1502003508, 1411134, 1411133, 1411135, 1403771, 1403770, 1407994, 1407993, 1101006106, 1101006098, 4151145, 1903230, 1903231, 1903232, 1908117, 1908118, 1908119, 19116002, 19116003, 19116004, 1961070, 1961071, 1961072, 1961073, 1408045, 1408038, 1407990,1407922, -- Outfit cosmetic
+    1407704, -- Outfit cosmetic
+    1400782, -- Outfit cosmetic
+    1407614, -- Outfit cosmetic
+    1407276, -- Outfit cosmetic
+    1410356, -- Cosmetic item
+    40605012, -- Cosmetic item
+    401035, -- Helmet cosmetic
 }
 
 _G.INS_BASE = 2000000000
@@ -1599,7 +1558,7 @@ local SUBTYPE_DEFAULT_TAB = {
 }
 local HAT_SUBS = { [401] = true }
 local HELMET_SUBS = { [502] = true, [505] = true }
-local HEAD_SUBS = { [401] = true } -- [FIX VIP] Đã xóa 502 và 505 để tách biệt hoàn toàn Mũ Bảo Hiểm khỏi Tóc/Mũ Thời Trang
+local HEAD_SUBS = { [401] = true } -- [VIP FIX] IDs 502 and 505 were removed to keep helmets separate from hair and fashion headwear
 local BAG_SUBS = { [501] = true, [504] = true }
 local FACE_SUBS = { [402] = true, [407] = true }
 local BODY_SUBS = { [404] = true, [405] = true, [501] = true, [504] = true, [502] = true, [505] = true }
@@ -1840,7 +1799,7 @@ end
 function F.tryLocalWearByIns(insID)
     insID = tonumber(insID)
     if not insID then return false end
-    if _G.LexusConfig and _G.LexusConfig.ModSkin == false then return false end -- Bỏ qua nếu tắt Mod Skin
+    if _G.LexusConfig and _G.LexusConfig.ModSkin == false then return false end -- Skip when the skin mod is disabled
     local resID = R.insToRes[insID]
     local wd = require("client.slua.logic.wardrobe.wardrobe_data")
     local d = wd:GetHallDepotItemDataByInsID(insID)
@@ -1994,7 +1953,7 @@ function F.saveWeaponToCache(weaponID, resID, insID)
     F.perfInvalidateLobby()
     F.invalidateSocialWearCache()
     F.persistMarkDirty()
-    F.log("ذاكرة سكن", weaponID, "→", resID)
+    F.log("Skin cache", weaponID, "->", resID)
 end
 
 function F.cacheWeaponSkinFromIns(weaponID, insID)
@@ -3318,7 +3277,7 @@ function F.getVehicleLicenseComp(vehicle)
 end
 
 function F.applyVehicleChassisLight(vehicle, skinId, lightId)
-    -- [FIX VIP] Nếu tắt Mod Skin thì bỏ qua không load đèn gầm
+    -- [VIP FIX] Skip underglow loading when the skin mod is disabled
     if _G.LexusConfig and _G.LexusConfig.ModSkin == false then return false end 
     
     skinId = tonumber(skinId)
@@ -3497,7 +3456,7 @@ end
 function F.vehicleSkinTick()
     F.vehicleAvatarTemper()
     
-    -- [FIX VIP] Ép hiển thị Kính & Mặt Nạ liên tục mỗi 1 giây (Bất chấp việc nhặt mũ bảo hiểm)
+    -- [VIP FIX] Reapply glasses and masks every second, even when a helmet is picked up
     pcall(function()
         local char = F.getLocalChar()
         if char then F.matchApplyFaceWear(char) end
@@ -4168,7 +4127,7 @@ function F.mergeInjectedArmorySkins()
 end
 
 function F.injectAll(entity)
-    if _G.LexusConfig and _G.LexusConfig.ModSkin == false then return false end -- Bỏ qua nếu tắt Mod Skin
+    if _G.LexusConfig and _G.LexusConfig.ModSkin == false then return false end -- Skip when the skin mod is disabled
     entity = entity or F.getEntity()
     if not entity or not entity.bInit then return false end
     local n, nNew = 0, 0
@@ -5581,7 +5540,7 @@ function F.hookLobbySwipePersistence()
                     F.socialDebounce(0.25, function() F.onSocialWearDirty(true) end)
                 end
                 
-                -- [FIX LỖI VIP] Tự động đắp lại Skin Mod khi game có dấu hiệu update súng ở sảnh
+                -- [VIP BUG FIX] Reapply the mod skin when the game updates the weapon in the lobby
                 F.socialDebounce(0.3, function()
                     if F.reapplyLobbyEquipped then F.reapplyLobbyEquipped() end
                 end)
@@ -5601,7 +5560,7 @@ function F.hookLobbySwipePersistence()
                 F.socialDebounce(0.2, function() F.onSocialWearDirty(true) end)
             end
             
-            -- [FIX LỖI VIP] Khi Click vào ô vũ khí ở Sảnh, đợi game đổi súng gốc xong thì 0.3s sau đắp skin Mod lên lại
+            -- [VIP BUG FIX] When a lobby weapon slot is clicked, wait for the game to switch the base weapon, then reapply the mod skin after 0.3 seconds
             F.socialDebounce(0.3, function()
                 if F.reapplyLobbyEquipped then F.reapplyLobbyEquipped() end
             end)
@@ -5934,7 +5893,7 @@ function F.hookVehicleChassisLight()
             _G.AddOutfitVehOrigEquippedFeature = LVF.CheckHasEquippedItem
         end
         LVF.CheckHasEquippedItem = function(self, featureId, vehicleId)
-            -- [FIX VIP] Bổ sung check điều kiện ModSkin
+            -- [VIP FIX] Add a ModSkin condition check
             if _G.LexusConfig and _G.LexusConfig.ModSkin ~= false then
                 if F.isChassisLightId(featureId) then
                     return F.getDesiredChassisLight(vehicleId) == tonumber(featureId)
@@ -5947,7 +5906,7 @@ function F.hookVehicleChassisLight()
             _G.AddOutfitVehOrigEquipChassisData = LVF.GetEquipedChassisLightData
         end
         LVF.GetEquipedChassisLightData = function(self, vehicleId, source)
-            -- [FIX VIP] Bổ sung check điều kiện ModSkin
+            -- [VIP FIX] Add a ModSkin condition check
             if _G.LexusConfig and _G.LexusConfig.ModSkin ~= false then
                 local our = F.getDesiredChassisLight(vehicleId)
                 if our then return our end
@@ -5959,7 +5918,7 @@ function F.hookVehicleChassisLight()
             _G.AddOutfitVehOrigChassisLightData = LVF.GetVehicleChassisLightData
         end
         LVF.GetVehicleChassisLightData = function(self, uid, vehicleId, position, source)
-            -- [FIX VIP] Bổ sung check điều kiện ModSkin
+            -- [VIP FIX] Add a ModSkin condition check
             if _G.LexusConfig and _G.LexusConfig.ModSkin ~= false then
                 if uid and DataMgr and DataMgr.roleData and tonumber(uid) == tonumber(DataMgr.roleData.uid) then
                     local our = F.getDesiredChassisLight(vehicleId)
@@ -6569,7 +6528,7 @@ function F.matchApplyFaceWear(char)
             local slotEnum = EAvatarSlotType and EAvatarSlotType[slotNameStr]
             local needRep = false
             
-            -- 1. GHI ĐÈ DATA MẠNG (Chống lỗi không đồng bộ)
+            -- 1. OVERRIDE NETWORK DATA (PREVENT DESYNCHRONIZATION)
             if applyData and slua.isValid(applyData) then
                 local found = false
                 for i = 0, applyData:Num() - 1 do
@@ -6602,13 +6561,13 @@ function F.matchApplyFaceWear(char)
                 end
             end
 
-            -- [LOGIC NGỦ ĐÔNG] - TỐI ƯU FPS TUYỆT ĐỐI
+            -- [SLEEP LOGIC] - MAXIMUM FPS OPTIMIZATION
             _G.FaceWearStateCache = _G.FaceWearStateCache or {}
-            -- Tạo ID định danh riêng biệt cho nhân vật hiện tại tránh trùng lặp
+            -- Create a unique identifier for the current character to prevent duplicates
             local cacheKey = tostring(comp) .. "_" .. tostring(slotID)
 
             if needRep or _G.FaceWearStateCache[cacheKey] ~= resID then
-                -- Lần đầu tiên ép hiển thị / Hoặc ID Skin bị thay đổi -> Chạy Full C++
+                -- First forced display, or a changed skin ID: run the full C++ update
                 if slotEnum then
                     if comp.CancelHideAvatarBySlot then comp:CancelHideAvatarBySlot(slotEnum) end
                     if comp.SetAvatarVisibility then comp:SetAvatarVisibility(slotEnum, true, true) end
@@ -6617,25 +6576,25 @@ function F.matchApplyFaceWear(char)
                     comp:PutOnCustomEquipmentByID(resID)
                 end
                 
-                -- Cập nhật Cache để vòng lặp sau đi vào Ngủ Đông
+                -- Update the cache so the next loop can enter sleep mode
                 _G.FaceWearStateCache[cacheKey] = resID
-                ok = true -- Bật cờ để gọi OnRep_BodySlotStateChanged (vẽ lại Mesh)
+                ok = true -- Set the flag to call OnRep_BodySlotStateChanged (redraw the mesh)
             else
-                -- TRẠNG THÁI NGỦ ĐÔNG: Data đã đúng, Mesh 3D đã được render.
-                -- Chỉ chạy hàm cực nhẹ CancelHide để chống Game tự ẩn khi nhặt Mũ bảo hiểm (1,2,3).
-                -- BỎ QUA việc Render lại Mesh để tránh Drop FPS.
+                -- SLEEP STATE: The data is correct and the 3D mesh has been rendered.
+                -- Run only the lightweight CancelHide function to prevent the game from hiding the item when helmets 1, 2, or 3 are picked up.
+                -- SKIP mesh rendering to prevent FPS drops.
                 if slotEnum and comp.CancelHideAvatarBySlot then 
                     comp:CancelHideAvatarBySlot(slotEnum) 
                 end
             end
         end
 
-        -- Gọi lệnh ép cho Mặt nạ (Mask)
+        -- Force-apply the mask
         forceApplySlot(maskRes, F.CUST_SLOT.FaceEquipemtSlot, "EAvatarSlotType_FaceEquipemtSlot")
-        -- Gọi lệnh ép cho Mắt kính (Glass)
+        -- Force-apply the glasses
         forceApplySlot(glassRes, F.CUST_SLOT.GlassEquipemtSlot, "EAvatarSlotType_GlassEquipemtSlot")
         
-        -- Cập nhật hình ảnh 3D CHỈ KHI THOÁT KHỎI NGỦ ĐÔNG (Khi cần thiết)
+        -- Update the 3D appearance ONLY when exiting sleep mode (when necessary)
         if ok and comp.OnRep_BodySlotStateChanged then
             comp:OnRep_BodySlotStateChanged()
         end
@@ -6777,12 +6736,12 @@ function F.matchApplyBodyWear(char)
     if not F.getDesiredOutfit() then
         pieces[#pieces + 1] = {
             F.getDesiredWear("tshirtRes", "tshirtRes", "AddOutfitLastLobbyTshirtRes", F.syncBodyCacheFromLobby),
-            F.CUST_SLOT.ClothesEquipemtSlot, "تيشرت",
+            F.CUST_SLOT.ClothesEquipemtSlot, "T-shirt",
         }
     end
-    pieces[#pieces + 1] = { F.getDesiredWear("pantsRes", "pantsRes", "AddOutfitLastLobbyPantsRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.PantsEquipemtSlot, "سروال" }
-    pieces[#pieces + 1] = { F.getDesiredWear("shoesRes", "shoesRes", "AddOutfitLastLobbyShoesRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.ShoesEquipemtSlot, "حذاء" }
-    pieces[#pieces + 1] = { F.getDesiredWear("glovesRes", "glovesRes", "AddOutfitLastLobbyGlovesRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.HandEffectEquipemtSlot, "قفازات" }
+    pieces[#pieces + 1] = { F.getDesiredWear("pantsRes", "pantsRes", "AddOutfitLastLobbyPantsRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.PantsEquipemtSlot, "Pants" }
+    pieces[#pieces + 1] = { F.getDesiredWear("shoesRes", "shoesRes", "AddOutfitLastLobbyShoesRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.ShoesEquipemtSlot, "Shoes" }
+    pieces[#pieces + 1] = { F.getDesiredWear("glovesRes", "glovesRes", "AddOutfitLastLobbyGlovesRes", F.syncBodyCacheFromLobby), F.CUST_SLOT.HandEffectEquipemtSlot, "Gloves" }
     local any, okAll = false, true
     for _, p in ipairs(pieces) do
         local res, slot, label = p[1], p[2], p[3]
@@ -7113,12 +7072,12 @@ function F.applySkinToWeaponRef(CurWeapon)
     
     local changedAny = false
 
-    -- LOGIC 1: LẤY ID HÌNH ẢNH ĐANG HIỂN THỊ THỰC TẾ
+    -- LOGIC 1: GET THE ID OF THE CURRENTLY DISPLAYED IMAGE
     local wac = CurWeapon.WeaponAvatarComponent
     local currentVisualID = 0
     if slua.isValid(wac) then currentVisualID = wac.CachedLoadedID or 0 end
 
-    -- NẾU SÚNG CHÍNH CHƯA PHẢI LÀ SKIN VIP -> THAY ĐỔI DATA
+    -- IF THE PRIMARY WEAPON IS NOT A VIP SKIN, UPDATE THE DATA
     if currentVisualID ~= tmp_id then
         changedAny = true
         pcall(function()
@@ -7131,7 +7090,7 @@ function F.applySkinToWeaponRef(CurWeapon)
         end)
     end
 
-    -- LOGIC 2: XỬ LÝ PHỤ KIỆN (ATTACHMENTS)
+    -- LOGIC 2: PROCESS ATTACHMENTS
     if _G.LexusConfig.SkinAttachment and tmp_id >= 1000000 and _G.VIP_Attachments and _G.VIP_Attachments[tmp_id] then
         local attachSkinConfig = _G.VIP_Attachments[tmp_id]
         local baseAttachMap = _G.BaseAttachToIndex
@@ -7160,7 +7119,7 @@ function F.applySkinToWeaponRef(CurWeapon)
                                         AttachmentArray:Set(AttachIdx, attachData)
                                         changedAny = true
                                         
-                                        -- Xóa cache Phụ kiện cũ để game Load phụ kiện VIP
+                                        -- Clear the old attachment cache so the game loads VIP attachments
                                         if slua.isValid(wac) then
                                             if wac.ClearMeshPathCacheBySlot then wac:ClearMeshPathCacheBySlot(AttachIdx) end
                                             if wac.ClearMeshBySlot then wac:ClearMeshBySlot(AttachIdx, true, true) end
@@ -7175,11 +7134,11 @@ function F.applySkinToWeaponRef(CurWeapon)
         end
     end
 
-    -- LOGIC 3: LỆNH THẦN THÁNH ÉP GAME VẼ LẠI MESH NGAY TRÊN TAY
+    -- LOGIC 3: FORCE THE GAME TO REDRAW THE MESH IN THE HAND IMMEDIATELY
     if changedAny then
         pcall(function()
             if slua.isValid(wac) then
-                -- Nếu là súng mới nhặt, xóa cái vỏ súng cũ kĩ đi
+                -- If this is a newly picked-up weapon, remove the old weapon model
                 if currentVisualID ~= tmp_id then
                     if wac.ClearMeshPathCacheBySlot then wac:ClearMeshPathCacheBySlot(0) end
                     if wac.ClearMeshBySlot then wac:ClearMeshBySlot(0, true, true) end
@@ -7341,7 +7300,7 @@ function F.matchApplyWeaponSkin(char)
         isVisualMatched = true
     end
 
-    -- [HỆ THỐNG SMART WATCHER V3] Quét toàn bộ Súng trên tay & Súng trong Balo
+    -- [SMART WATCHER V3] Scan all weapons in hand and in the backpack
     if not _G.SmartWeaponWatcherActive then
         _G.SmartWeaponWatcherActive = true
         pcall(function()
@@ -7350,7 +7309,7 @@ function F.matchApplyWeaponSkin(char)
                 ticker.AddTimerLoop(0, function()
                     if not _G.LexusConfig.ModSkin then return end
                     
-                    -- [CỜ NGỦ ĐÔNG IN-GAME]: Nếu đã ra Sảnh -> Ngủ luôn, không chạy gì hết!
+                    -- [IN-GAME SLEEP FLAG]: If the player has returned to the lobby, sleep and do not run anything!
                     if _G.AddOutfit and not _G.AddOutfit.isInRealMatch() then return end
                     
                     local pController = slua_GameFrontendHUD and slua_GameFrontendHUD:GetPlayerController()
@@ -7358,25 +7317,25 @@ function F.matchApplyWeaponSkin(char)
                     local pChar = pController:GetPlayerCharacterSafety()
                     if not pChar or not slua.isValid(pChar) then return end
                     
-                    -- Thay vì chỉ lấy súng trên tay, lấy luôn KHO VŨ KHÍ (Weapon Manager)
+                    -- Instead of checking only the weapon in hand, also retrieve the weapon inventory (Weapon Manager)
                     local WeaponManager = pChar:GetWeaponManager()
                     if not WeaponManager or not slua.isValid(WeaponManager) then return end
                     local uWeaponList = WeaponManager:GetAllInventoryWeaponList(false)
                     if not uWeaponList or not slua.isValid(uWeaponList) then return end
                     
                     local count = uWeaponList:Num()
-                    -- Lặp qua từng khẩu súng bạn đang sở hữu (Súng 1, Súng 2, Lục, Dao)
+                    -- Loop through every owned weapon (Weapon 1, Weapon 2, Pistol, Knife)
                     for i = 0, count - 1 do
                         local wep = uWeaponList:Get(i)
                         if slua.isValid(wep) then
-                            -- Kiểm tra data (synData) của súng xem đã là Data VIP chưa
+                            -- Check whether the weapon data (synData) is already VIP data
                             local synSkinID = F.getSynUXOfficialSkinID(wep)
                             local baseID = 0
                             pcall(function() baseID = wep:GetItemDefineID().TypeSpecificID end)
                             local tSkin = F.findTargetSkinForWeaponRes(baseID) or baseID
                             
-                            -- NẾU DATA CHƯA PHẢI LÀ VIP -> Vừa lụm thẳng vào Balo -> Bắn lệnh Load ngầm!
-                            -- HOẶC bật Skin Phụ Kiện -> Kiểm tra phụ kiện
+                            -- IF THE DATA IS NOT VIP: when it is picked up into the backpack, trigger a background load
+                            -- OR, if attachment skins are enabled, check the attachments
                             if synSkinID ~= tSkin or _G.LexusConfig.SkinAttachment then
                                 if _G.AddOutfit and _G.AddOutfit.applySkinToWeapon then
                                     _G.AddOutfit.applySkinToWeapon(wep)
@@ -7389,7 +7348,7 @@ function F.matchApplyWeaponSkin(char)
         end)
     end
 
-    -- BÁO CÁO HOÀN THÀNH: Nếu súng cầm trên tay đã xong xuôi thì khóa luồng gốc của Engine
+    -- COMPLETION REPORT: If the weapon in hand is ready, block the engine's original flow
     if isVisualMatched and not _G.LexusConfig.SkinAttachment then
         _weaponApplied = true
         return true
@@ -7424,7 +7383,7 @@ function F.startMatchWatcher(char)
             _matchWearDone = F.matchApplyAllSlots(cur)
         end
         F.matchApplyHat(cur)
-        F.matchApplyFaceWear(cur) -- [FIX VIP] Bổ sung lệnh gọi ép Kính & Mặt Nạ chạy liên tục giống Mũ
+        F.matchApplyFaceWear(cur) -- [VIP FIX] Add repeated calls to force glasses and masks, just like helmets
         if not _weaponApplied then
             F.matchApplyWeaponSkin(cur)
         end
@@ -7786,13 +7745,13 @@ function F.hookGarageTheme()
         local ModuleManager = require("client.module_framework.ModuleManager")
         if not TeamupHandler then return end
         
-        -- Hook: Update Từng Slot Xe ở sảnh
+        -- Hook: Update each vehicle slot in the lobby
         local o_send_update = TeamupHandler.send_update_car_main_page_slot_req
         if o_send_update and not TeamupHandler._AddOutfitGarageUpdateHooked then
             TeamupHandler._AddOutfitGarageUpdateHooked = true
             TeamupHandler.send_update_car_main_page_slot_req = function(slot_id, item_inst_id)
                 
-                -- [TỐI ƯU FPS - NGỦ ĐÔNG] Nếu đang trong trận thực sự -> Bỏ qua toàn bộ logic Gara Sảnh, trả về game gốc ngay lập tức!
+                -- [FPS SLEEP OPTIMIZATION] If actually in a match, skip all lobby garage logic and immediately return to the original game behavior
                 if F.isInRealMatch() then 
                     return o_send_update(slot_id, item_inst_id) 
                 end
@@ -7838,13 +7797,13 @@ function F.hookGarageTheme()
             end
         end
 
-        -- Hook: Update Hàng loạt xe ở sảnh
+        -- Hook: Update multiple vehicles in the lobby
         local o_send_batch = TeamupHandler.send_batch_put_on_sportscar_req
         if o_send_batch and not TeamupHandler._AddOutfitGarageBatchHooked then
             TeamupHandler._AddOutfitGarageBatchHooked = true
             TeamupHandler.send_batch_put_on_sportscar_req = function(instid_list)
                 
-                -- [TỐI ƯU FPS - NGỦ ĐÔNG] Tương tự, chặn đứng khi đang trong trận
+                -- [FPS SLEEP OPTIMIZATION] Likewise, stop processing while in a match
                 if F.isInRealMatch() then 
                     return o_send_batch(instid_list) 
                 end
@@ -7979,7 +7938,7 @@ function F.start()
     F.hookEnterGame()
 
 -- ==============================================================================
--- [THÊM MỚI] LOGIC KILL MESSENGER, DEADBOX, BỘ ĐẾM KILL & ICON TỪ CODE MẪU
+-- [NEW] KILL MESSAGE, DEADBOX, KILL COUNTER, AND ICON LOGIC FROM THE SAMPLE CODE
 -- ==============================================================================
 local function decodeExpand(expandContent)
     local ok, exp = pcall(function() return slua.LuaArchiverDecode(LuaStateWrapper, expandContent) or {} end)
@@ -7994,7 +7953,7 @@ local _cachedMyName = nil
 local function isMyKill(data)
     if not data then return false end
     if data.bIamCauser then return true end
-    -- Tối ưu: Chỉ lấy tên 1 lần duy nhất, tránh gọi C++ SLUA hàng ngàn lần
+    -- Optimization: Retrieve the name only once to avoid thousands of C++ SLUA calls
     if not _cachedMyName then
         local hud = slua_GameFrontendHUD
         if hud then
@@ -8010,7 +7969,7 @@ local function isMyKill(data)
 end
 
 local function getCurrentWeaponSkinID()
-    -- [ĐÃ FIX] Lấy chính xác Skin ID của cây súng ĐANG CẦM TRÊN TAY để tránh hiện nhầm Kill Message
+    -- [FIXED] Get the exact skin ID of the weapon CURRENTLY IN HAND to prevent an incorrect kill message
     local hud = slua_GameFrontendHUD
     if not hud then return 0 end
     local pc = hud:GetPlayerController()
@@ -8025,7 +7984,7 @@ local function getCurrentWeaponSkinID()
             local synDataRef = slua.IndexReference(currWeapon.synData:Get(7), "defineID")
             local skinID = synDataRef and slua.isValid(synDataRef) and synDataRef.TypeSpecificID or 0
             
-            -- Chỉ xuất Kill Message nếu súng trên tay thực sự là súng VIP (ID > 1000000)
+            -- Show the kill message only if the weapon in hand is actually a VIP weapon (ID > 1000000)
             if skinID > 1000000 then 
                 currentSkinID = skinID
             end
@@ -8038,7 +7997,7 @@ end
 local _downloadedAssetsCache = {}
 local function downloadTeamAssets(skinID)
     if not skinID or skinID == 0 or skinID == 69 then return end
-    -- Tối ưu: Chỉ tải 1 lần duy nhất mỗi skin, tránh spam băng thông và CPU
+    -- Optimization: Load each skin only once to avoid excessive bandwidth and CPU usage
     if _downloadedAssetsCache[skinID] then return end
     _downloadedAssetsCache[skinID] = true
 
@@ -8060,7 +8019,7 @@ local function downloadTeamAssets(skinID)
 end
 
 local function patchTeamKill(messageData)
-    if not _G.LexusConfig.KillMessage then return messageData end -- [CHẶN NẾU TẮT CÔNG TẮC]
+    if not _G.LexusConfig.KillMessage then return messageData end -- [BLOCK WHEN THE TOGGLE IS OFF]
     if not messageData or not isMyKill(messageData) then return messageData end
     local currentSkinID = getCurrentWeaponSkinID()
     if not currentSkinID or currentSkinID == 0 or currentSkinID == 69 then return messageData end
@@ -8088,7 +8047,7 @@ local function installTeamBroadcastHooks()
         impl2.CopyKillOrPutDownMessageDataUserDataToLuaTable = function(self, messageData)
             local copied = O_Copy(self, messageData)
             
-            -- [TỐI ƯU TUYỆT ĐỐI] Nếu tắt Kill Message -> Bỏ qua toàn bộ logic bên dưới, trả về nguyên bản của game luôn.
+            -- [MAXIMUM OPTIMIZATION] If Kill Message is disabled, skip all logic below and immediately return the game's original result.
             if not _G.LexusConfig.KillMessage then return copied end
             
             local ok2, result = pcall(function() return patchTeamKill(copied) end)
@@ -8100,18 +8059,18 @@ local function installTeamBroadcastHooks()
     pcall(function() wrapCopy(require("GameLua.Mod.SingleTraining.Client.BattleKillBroadcast.BattleKillBroadcastSubSystem"), "training") end)
 end
 
--- Khởi tạo hệ thống Kill Count
+-- Initialize the Kill Count system
 _G.killCountInfo = {
     [101001] = 0000, [101004] = 0000, [101003] = 0000, [103001] = 0000,
     [102001] = 0000, [105001] = 0000, [102002] = 0000, [103002] = 0000
 }
 
 function _G.saveKillCountToFile()
-    -- Đã làm rỗng hàm lưu file để chống Drop FPS
+    -- The file-save function was emptied to prevent FPS drops
 end
 
 function _G.loadKillCountFromFile()
-    -- Đã làm rỗng hàm đọc file để chống Drop FPS
+    -- The file-read function was emptied to prevent FPS drops
 end
 
 function _G.addKill(weaponID, count)
@@ -8122,7 +8081,7 @@ end
 
 function _G.getKills(weaponID) return weaponID and _G.killCountInfo[weaponID] or 0 end
 
--- Hook Deadbox (Tạo Hòm Xác) và KillInfo
+-- Deadbox (create loot crate) and KillInfo hook
 pcall(function()
     local SKillInfo = require("GameLua.Mod.BaseMod.Client.KillInfoTips.KillInfo")
     local SKillInfoModuleManager = require("client.module_framework.ModuleManager")
@@ -8134,7 +8093,7 @@ pcall(function()
         SKillInfo.__inner_impl.FileItem = function(self, DamageRecordData)
             if not self or not DamageRecordData then return end
 
-            -- [TỐI ƯU TUYỆT ĐỐI] Tắt cả 3 chức năng -> Trả về game gốc ngay lập tức, siêu nhẹ
+            -- [MAXIMUM OPTIMIZATION] If all three features are disabled, immediately return to the original game behavior
             if not _G.LexusConfig.SkinDeadBox and not _G.LexusConfig.KillCountUI and not _G.LexusConfig.KillMessage then
                 return O_FileItem(self, DamageRecordData)
             end
@@ -8155,7 +8114,7 @@ pcall(function()
                         if carSkinID ~= 0 then
                             local ExpandData = slua.LuaArchiverDecode(LuaStateWrapper, DamageRecordData.ExpandDataContent) or {}
                             ExpandData.CauserVehicleSkinID = carSkinID
-                            if _G.LexusConfig.KillMessage then -- CHỈ BẬT MỚI ÉP SKIN LÊN KILL FEED
+                            if _G.LexusConfig.KillMessage then -- APPLY THE SKIN TO THE KILL FEED ONLY WHEN ENABLED
                                 self:ChangeInfoBgByWeaponAvatarIDLua(carSkinID)
                                 DamageRecordData.CauserWeaponAvatarID = carSkinID
                                 DamageRecordData.CauserClothAvatarID = _G.SuitSkin or 0
@@ -8177,7 +8136,7 @@ pcall(function()
                                 local synDataRef = slua.IndexReference(currWeapon.synData:Get(7), "defineID")
                                 local SkinID = synDataRef and slua.isValid(synDataRef) and synDataRef.TypeSpecificID or 0
                                 
-                                -- [TỐI ƯU FPS] Súng Mod luôn có ID lớn hơn 1.000.000 (Ví dụ M4 Băng: 1101004046)
+                                -- [FPS OPTIMIZATION] Mod weapons always have IDs greater than 1,000,000 (for example, Frost M4: 1101004046)
                                 if SkinID > 1000000 then 
                                     if _G.LexusConfig.KillCountUI then 
                                         ExpandData.KillCounterItemId = DefineID
@@ -8194,7 +8153,7 @@ pcall(function()
 
                             if hasChanged or _G.LexusConfig.KillMessage then
                                 _G.UpdateMyKillCounter = true
-                                if _G.LexusConfig.KillMessage then -- CHỈ BẬT MỚI THAY ĐỔI GÓI TIN ĐỂ HIỆN TRÊN TOP
+                                if _G.LexusConfig.KillMessage then -- CHANGE THE MESSAGE PACKAGE FOR THE TOP DISPLAY ONLY WHEN ENABLED
                                     local synData = currWeapon.synData
                                     if synData and slua.isValid(synData) then
                                         local weaponDefineID = slua.IndexReference(synData:Get(7), "defineID")
@@ -8215,7 +8174,7 @@ pcall(function()
     end
 end)
 
--- Hook UI Kill Counter (Cập nhật số đếm & Icon trên màn hình)
+-- Kill Counter UI hook (update the count and on-screen icon)
 pcall(function()
     local MyMainKillCounter = require("GameLua.Mod.BaseMod.Client.KillCounter.MainKillCounter")
     local MyKillCountSubSystem = require("GameLua.Mod.BaseMod.Client.KillCounter.KillCounterUISubsystem")
@@ -8231,7 +8190,7 @@ pcall(function()
         
         local o_OnRefreshUI = MyMainKillCounter.__inner_impl.OnRefreshUI
         MyMainKillCounter.__inner_impl.OnRefreshUI = function(self, _, _, UID)
-            if not _G.LexusConfig.KillCountUI then return end -- CHẶN KHI TẮT
+            if not _G.LexusConfig.KillCountUI then return end -- BLOCK WHEN DISABLED
             local LogicKillCounter = ModuleManager.GetModule(ModuleManager.CommonModuleConfig.LogicKillCounter)
             local curEquipedKillCounter = LogicKillCounter:GetEquipedKillCounterId(6114302174, self.WeaponID)
             local uCharacter = slua_GameFrontendHUD:GetPlayerController():GetPlayerCharacterSafety()
@@ -8249,9 +8208,9 @@ pcall(function()
 
         local o_UpdateMainKillCounterUI = MyKillCountSubSystem.__inner_impl.UpdateMainKillCounterUI
         MyKillCountSubSystem.__inner_impl.UpdateMainKillCounterUI = function(self, bShow, WeaponID, AvatarID)
-            -- [TỐI ƯU TUYỆT ĐỐI] Bóp nghẹt ngay lệnh gọi UI của Game nếu đang tắt, CHỐNG CHỚP (FLASH)
+            -- [MAXIMUM OPTIMIZATION] Block the game UI call immediately when disabled to prevent flickering
             if not _G.LexusConfig.KillCountUI then
-                o_UpdateMainKillCounterUI(self, false, WeaponID, AvatarID) -- Ép tham số False
+                o_UpdateMainKillCounterUI(self, false, WeaponID, AvatarID) -- Force the parameter to False
                 local MainKillCounter = UIManager.GetUI(UIManager.UI_Config_InGame.MainKillCounter)
                 if MainKillCounter then UIManager.CloseUI(UIManager.UI_Config_InGame.MainKillCounter) end
                 return
@@ -8272,16 +8231,16 @@ pcall(function()
                 
                 local curEquipedKillCounter = LogicKillCounter:GetEquipedKillCounterId(6114302174, currentEquipAvatrid)
                 
-                -- [TỐI ƯU FPS] NHẬN DIỆN SÚNG MOD: Súng thường ID < 1.000.000, Súng Mod ID > 1.000.000
+                -- [FPS OPTIMIZATION] IDENTIFY MOD WEAPONS: regular weapon IDs are below 1,000,000; mod weapon IDs are above 1,000,000
                 local isModdedSkin = (currentEquipAvatrid and currentEquipAvatrid > 1000000)
                 
-                -- Đóng UI nếu là súng lục, dao, CHẢO hoặc SÚNG THƯỜNG KHÔNG CÓ SKIN
+                -- Close the UI for pistols, knives, pans, or regular weapons without skins
                 if (SupportKillCounter == nil or not isModdedSkin) then
                     if MainKillCounter then
                         UIManager.CloseUI(UIManager.UI_Config_InGame.MainKillCounter)
                     end
                 else
-                    -- Hiện UI nếu là súng Mod (Dù curEquipedKillCounter có trả về nil do server không nhận diện được)
+                    -- Show the UI for a mod weapon, even if curEquipedKillCounter returns nil because the server does not recognize it
                     if not MainKillCounter then
                         UIManager.ShowUI(UIManager.UI_Config_InGame.MainKillCounter, DefineID, currentEquipAvatrid)
                         MainKillCounter = UIManager.GetUI(UIManager.UI_Config_InGame.MainKillCounter)
@@ -8298,7 +8257,7 @@ pcall(function()
 
         local o_CheckNeedMainKillCounterUI = MyKillCountSubSystem.__inner_impl.CheckNeedMainKillCounterUI
         MyKillCountSubSystem.__inner_impl.CheckNeedMainKillCounterUI = function(self, Weapon, PlayerID)
-            if not _G.LexusConfig.KillCountUI then return end -- CHẶN KHI TẮT
+            if not _G.LexusConfig.KillCountUI then return end -- BLOCK WHEN DISABLED
             local uCharacter = slua_GameFrontendHUD:GetPlayerController():GetPlayerCharacterSafety()
             local currweapon = uCharacter:GetCurrentWeapon()
             if currweapon ~= nil then
@@ -8312,7 +8271,7 @@ pcall(function()
     end
 end)
 
--- Vòng lặp Updater (Đã tối ưu Cache: Chỉ Update UI khi đổi súng hoặc có mạng Kill)
+-- Updater loop (cache optimized: update the UI only when the weapon changes or a kill event occurs)
 local _lastKCWeaponID = 0
 local _lastKCSkinID = 0
 
@@ -8333,17 +8292,17 @@ _G.GameAvatarHandlerkillcounter = function()
     
     local currweapon = uCharacter:GetCurrentWeapon()
     if currweapon and slua.isValid(currweapon) then
-        -- Lấy DefineID an toàn, không tạo rác RAM
+        -- Safely retrieve DefineID without creating unnecessary memory allocations
         local defineIDObj = currweapon:GetItemDefineID()
         local currentWeaponID = (defineIDObj and slua.isValid(defineIDObj)) and defineIDObj.TypeSpecificID or 0
         
-        -- Lấy Skin ID từ Cache của hệ thống Skin V7.5 (Cực nhẹ, không gọi SLUA)
+        -- Get the skin ID from the V7.5 skin system cache (very lightweight; does not call SLUA)
         local currentSkinID = 0
         if _G.AddOutfitLastAppliedSkin and _G.AddOutfitLastAppliedSkin[currentWeaponID] then
             currentSkinID = _G.AddOutfitLastAppliedSkin[currentWeaponID]
         end
 
-        -- TỐI ƯU CỰC ĐỘ: Chỉ gửi lệnh cập nhật UI nếu MỚI ĐỔI SÚNG hoặc MỚI GIẾT NGƯỜI
+        -- EXTREME OPTIMIZATION: send a UI update only when the weapon has changed or a new kill has occurred
         if _G.UpdateMyKillCounter or currentWeaponID ~= _lastKCWeaponID or currentSkinID ~= _lastKCSkinID then
             _lastKCWeaponID = currentWeaponID
             _lastKCSkinID = currentSkinID
@@ -8366,18 +8325,18 @@ local function LobbyTickSetup()
         _G.CounterUpdated = true
         _G.loadKillCountFromFile()
     end
-    -- ĐÃ XÓA LOGIC QUÉT FILE translateec.conf LIÊN TỤC GÂY LAG
+    -- The repeated translateec.conf file-scanning logic that caused lag has been removed
 end
 
--- Kích hoạt Hooks và Loop
+-- Activate hooks and loops
 pcall(function()
     installTeamBroadcastHooks()
-    LobbyTickSetup() -- Chỉ gọi đọc file 1 lần duy nhất khi vào game, không lặp lại nữa
+    LobbyTickSetup() -- Read the file only once when entering the game; do not repeat the operation
     
     local ticker = require("common.time_ticker")
     if ticker and ticker.AddTimerLoop then
         ticker.AddTimerLoop(0, _G.GameAvatarHandlerkillcounter, -1, 0.5)
-        -- ĐÃ XÓA VÒNG LẶP ĐỌC FILE 0.4 GIÂY ĐỂ TRÁNH DROP FPS
+        -- The 0.4-second file-reading loop was removed to prevent FPS drops
     end
 end)
 -- ==============================================================================
@@ -8425,29 +8384,29 @@ if _G.LexusConfig and _G.LexusConfig.ModSkin == true then
     F.start()
 end
 
--- [FIX VIP] HỆ THỐNG TỰ ĐỘNG KHÔI PHỤC SKIN Ở SẢNH KHI VỪA MỞ GAME
+-- [VIP FIX] Automatically restore skins in the lobby when the game starts
 _G.AddOutfitLobbyRestored = false
 
 local function AutoRestoreLobbySkin()
     if not (_G.LexusConfig and _G.LexusConfig.ModSkin == true) then return end
     if _G.AddOutfitLobbyRestored then return end
     
-    -- [CỜ NGỦ ĐÔNG LOBBY]: Nếu đã leo lên máy bay vào trận -> Ngủ luôn, không đọc file Sảnh nữa!
+    -- [LOBBY SLEEP FLAG]: Once the player boards the plane and enters a match, sleep and stop reading the lobby file
     if _G.AddOutfit and _G.AddOutfit.isInRealMatch() then return end
     
     pcall(function()
         if GameStatus and GameStatus.IsInLobbyOrMainCity and GameStatus.IsInLobbyOrMainCity() then
-            -- Chờ DataMgr tải xong UID của nhân vật (Tránh lỗi load sớm quá bị tịt)
+            -- Wait for DataMgr to finish loading the character UID (avoid failures caused by loading too early)
             if DataMgr and DataMgr.roleData and DataMgr.roleData.uid then
                 local LMC = require("client.slua.logic.lobby.Main.Lobby_Main_Control")
                 if LMC and LMC.GetCurPage then
                     if _G.AddOutfit and _G.AddOutfit.reapplyLobbyEquipped then
-                        -- Bắn liên hoàn lệnh: Đọc File -> Gán Data -> Vẽ lên nhân vật
+                        -- Run the sequence: read the file, assign the data, then render it on the character
                         _G.AddOutfit.persistLoadFromDisk() 
                         _G.AddOutfit.persistApplyLoaded() 
                         _G.AddOutfit.reapplyLobbyEquipped() 
                         
-                        -- Chốt cờ đã hoàn thành
+                        -- Set the completion flag
                         _G.AddOutfitLobbyRestored = true
                     end
                 end
@@ -8456,7 +8415,7 @@ local function AutoRestoreLobbySkin()
     end)
 end
 
--- Chạy ngầm 1 giây / lần lúc vừa vô game, load xong là tự động ngưng
+-- Run in the background once per second after entering the game; stop automatically when loading is complete
 pcall(function()
     local ticker = require("common.time_ticker")
     if ticker and ticker.AddTimerLoop then
@@ -8464,11 +8423,11 @@ pcall(function()
     end
 end)
 -- ==============================================================================
--- ================= KẾT THÚC CORE ADD-OUTFIT V7.5 (HỆ THỐNG SKIN) ==============
+-- ================= END OF ADD-OUTFIT V7.5 CORE (SKIN SYSTEM) ==============
 -- ==============================================================================
 
 -- ==============================================================================
--- ================= KẾT THÚC CORE ADD-OUTFIT V7.5 (HỆ THỐNG SKIN) ==============
+-- ================= END OF ADD-OUTFIT V7.5 CORE (SKIN SYSTEM) ==============
 -- ==============================================================================
 
 -- ============================================================================
@@ -8490,7 +8449,7 @@ function _G.InitModMenuTab()
 
     local fakeTextMap = {
         [999000] = T("SKIN SETTINGS", "SKIN SETTINGS"),
-        [999005] = T("SKIN / EMOTE", "SKIN / EMOTE"),
+        [999005] = T("SKIN", "SKIN"),
     }
 
     if LocUtil and not LocUtil._IsSkinOnlyMenuHooked then
@@ -8514,14 +8473,8 @@ function _G.InitModMenuTab()
     if not SettingPageDefine.ModMenu then
         local StackSkin = {
             {
-                Key = "ModMenu_ModEmote", UI = AliasMap.Switcher,
-                Text = T("Mở Khóa Full Hành Động VIP (Emotes)", "Unlock All VIP Emotes"),
-                GetFunc = function() return _G.LexusConfig.ModEmote end,
-                SetFunc = function(c, v) _G.LexusConfig.ModEmote = v return true end
-            },
-            {
                 Key = "ModMenu_ModSkin", UI = AliasMap.Switcher,
-                Text = T("Hệ Thống Mod Skin VIP (Mở túi đồ chọn)", "VIP Mod Skin System (Open inventory)"),
+                Text = T("VIP Mod Skin System (Open inventory)", "VIP Mod Skin System (Open inventory)"),
                 GetFunc = function() return _G.LexusConfig.ModSkin end,
                 SetFunc = function(c, v)
                     _G.LexusConfig.ModSkin = v
@@ -8535,13 +8488,13 @@ function _G.InitModMenuTab()
             },
             {
                 Key = "ModMenu_SkinDeadBox", UI = AliasMap.Switcher,
-                Text = T("Skin Hòm Xác (Ăn theo skin Súng/Xe)", "Deadbox Skin (Sync with Weapon)"),
+                Text = T("Deadbox Skin (Sync with Weapon)", "Deadbox Skin (Sync with Weapon)"),
                 GetFunc = function() return _G.LexusConfig.SkinDeadBox end,
                 SetFunc = function(c, v) _G.LexusConfig.SkinDeadBox = v return true end
             },
             {
                 Key = "ModMenu_SkinAttachment", UI = AliasMap.Switcher,
-                Text = T("Skin Phụ Kiện Súng (Nòng, Tay cầm...)", "Weapon Attachment Skin"),
+                Text = T("Weapon Attachment Skin", "Weapon Attachment Skin"),
                 GetFunc = function() return _G.LexusConfig.SkinAttachment end,
                 SetFunc = function(c, v) _G.LexusConfig.SkinAttachment = v return true end
             },
@@ -8553,13 +8506,13 @@ function _G.InitModMenuTab()
             },
             {
                 Key = "ModMenu_KillCountUI", UI = AliasMap.Switcher,
-                Text = T("Bộ Đếm Kill (Hiển thị số Kill vũ khí)", "Kill Counter UI"),
+                Text = T("Kill Counter UI", "Kill Counter UI"),
                 GetFunc = function() return _G.LexusConfig.KillCountUI end,
                 SetFunc = function(c, v) _G.LexusConfig.KillCountUI = v return true end
             },
             {
                 Key = "ModMenu_SkinOpenLink", UI = AliasMap.Switcher,
-                Text = T("Hướng Dẫn Mod Skin Mũ/Balo (Link)", "Mod Skin Guide (Link)"),
+                Text = T("Mod Skin Guide (Link)", "Mod Skin Guide (Link)"),
                 GetFunc = function() return _G.LexusConfig.SkinOpenLink end,
                 SetFunc = function(c, v)
                     _G.LexusConfig.SkinOpenLink = v
@@ -8619,153 +8572,3 @@ end
 
 -- Register the retained page when the game settings are initialized.
 pcall(function() _G.InitModMenuTab() end)
-
--- ==============================================================================
--- ================= BẮT ĐẦU LOGIC MOD EMOTE (CHỈ INGAME - 0% DROP FPS) =========
--- ==============================================================================
-pcall(function()
-    local QuickExpressionUtils = require("GameLua.Mod.BaseMod.Client.Emote.QuickExpressionUtils")
-
-    -- Danh sách ID Hành Động VIP
-    local EXTRA_EMOTES = {
-          -- [ HÀNH ĐỘNG ]
-    12201301, -- Hành động Sát thủ Gothic
-    12216101, -- Hành động Võ sĩ Huyết Ưng
-    12212201, -- Hành động Sát thủ Cực Ám
-    12219207, -- Hành động Đại tướng Thiên Ngưu
-    12209001, -- Hành động Võ sĩ (Samurai)
-    12219561, -- Hành động Áo choàng Đỏ thẫm
-    12210001, -- Hành động Cái chạm của Tử thần
-    12219022, -- Hành động Thiết vệ Gai góc
-    12208801, -- Hành động Dũng sĩ Bán thần
-    12210801, -- Hành động Thợ săn Vỏ bạc
-    12200701, -- Hành động Du hành Không thời gian
-    12219242, -- Hành động Dạo bước Bầu trời
-    12206001, -- Hành động Hoa linh Đồng xanh
-    12205401, -- Hành động Vua của muôn thú
-    12205201, -- Hành động Trái tim Cự thú
-    12212601, -- Hành động Sát lục Thần bí
-    12205601, -- Hành động Linh hồn Cự thú
-    12219208, -- Hành động Hầu vương Cyber
-    12212001, -- Hành động Võ thánh
-    12206801, -- Hành động Hải long Thần bí
-    12209801, -- Hành động Ngự linh sư
-    12211401, -- Hành động Nữ phù thủy Băng tuyết
-    12207001, -- Hành động Du hành Biển sao
-    12211801, -- Hành động Chúa tể Trật tự
-    12207901, -- Hành động Hải vương Quyến rũ
-    12203401, -- Hành động Kỷ niệm Ảo ảnh
-    12204001, -- Hành động Chú hề (Ngày Cá tháng Tư)
-    12201801, -- Hành động Người bảo vệ Vùng tuyết
-    12215601, -- Hành động Siêu nhân Hằng tinh
-    12215532, -- Hành động Lãnh chúa Ngọn lửa
-    12213201, -- Hành động Kế hoạch Ngày mai
-    12215529, -- Hành động Kỵ sĩ Đua xe
-    12219053, -- Hành động Nữ hoàng Trân bảo
-    12204601, -- Hành động Thiên hạ Bố võ
-    12215701, -- Hành động Hành tinh Vượn người
-    12219003, -- Hành động Bóng tối Thần linh
-    12219004, -- Hành động Ngân hồn Rực lửa
-    12219009, -- Hành động Mê hoặc Rực lửa
-    12219216, -- Hành động Tế tư Héo úa
-    }
-
-    -- TỐI ƯU CỰC ĐỘ: Cache dữ liệu trên RAM để game không phải tạo bảng mới mỗi lần bấm nút
-    local CachedInGameEmotes = nil
-    local LastBaseCount = -1
-    local LastEmoteSwitchState = nil
-
-    -- Hàm trộn Emote 1 lần duy nhất
-    local function GetOptimizedEmoteList(baseList)
-        local baseCount = baseList and #baseList or 0
-        local isEmoteModEnabled = _G.LexusConfig.ModEmote == true
-
-        -- Nếu đã trộn rồi, số lượng Emote gốc không đổi, VÀ trạng thái nút Bật/Tắt không đổi -> Lấy luôn từ Cache ra xài
-        if CachedInGameEmotes and LastBaseCount == baseCount and LastEmoteSwitchState == isEmoteModEnabled then
-            return CachedInGameEmotes
-        end
-
-        local compact = {}
-        local seen = {}
-        
-        -- 1. Thêm Emote mặc định của người chơi
-        if baseList then
-            for _, data in pairs(baseList) do
-                if data and data.DefineID and data.DefineID.TypeSpecificID then
-                    table.insert(compact, data)
-                    seen[data.DefineID.TypeSpecificID] = true
-                end
-            end
-        end
-
-        -- 2. CHỈ Thêm Emote VIP NẾU ĐANG BẬT CÔNG TẮC
-        if isEmoteModEnabled then
-            for _, UXOfficialteID in ipairs(EXTRA_EMOTES) do
-                if not seen[UXOfficialteID] then
-                    table.insert(compact, {
-                        DefineID = {TypeSpecificID = UXOfficialteID},
-                        Name = tostring(UXOfficialteID)
-                    })
-                    seen[UXOfficialteID] = true
-                end
-            end
-        end
-
-        CachedInGameEmotes = compact
-        LastBaseCount = baseCount
-        LastEmoteSwitchState = isEmoteModEnabled
-        return CachedInGameEmotes
-    end
-
-    -- Hook vào hàm Load danh sách của In-game
-    if QuickExpressionUtils and not _G.__EMOTE_INGAME_HOOKED then
-        _G.__EMOTE_INGAME_HOOKED = true
-        _G.__EMOTE_ORIG_GET_LIST = QuickExpressionUtils.GetShowExpressionList
-        
-        QuickExpressionUtils.GetShowExpressionList = function()
-            local baseList, nWeaponShowEmoteID = _G.__EMOTE_ORIG_GET_LIST()
-            return GetOptimizedEmoteList(baseList), nWeaponShowEmoteID
-        end
-    end
-
-    -- Hook vào sự kiện bấm nút Emote trong game để ép UI vẽ ra
-    if not _G.__EMOTE_MENU_EVENT_HOOKED and EventSystem and EventSystem.registEvent then
-        _G.__EMOTE_MENU_EVENT_HOOKED = true
-        EventSystem:registEvent(EVENTTYPE_INGAME, EVENTID_INGAME_QUICK_EXPRESSION_DECAL_CLICK, function()
-            pcall(function()
-                -- NẾU ĐANG TẮT MOD EMOTE -> Trả về giao diện mặc định của Game để khỏi lỗi UI
-                if not _G.LexusConfig.ModEmote then return end 
-
-                local UIManager = require("client.slua_ui_framework.manager")
-                if not UIManager or not UIManager.UI_Config_InGame then return end
-                local subPanel = UIManager.GetUI(UIManager.UI_Config_InGame.QuickExpressionDecalSubPanel)
-                
-                if subPanel and subPanel.GetQuickExpressionDecalItemByIndex and CachedInGameEmotes then
-                    local showCount = 0
-                    for _, data in ipairs(CachedInGameEmotes) do
-                        local UXOfficialteID = data.DefineID and data.DefineID.TypeSpecificID
-                        if UXOfficialteID and UXOfficialteID > 0 then
-                            showCount = showCount + 1
-                            local item = subPanel:GetQuickExpressionDecalItemByIndex(showCount)
-                            if item then
-                                -- Tắt các hiệu ứng thừa làm nặng máy
-                                if item.UIRoot.WidgetSwitcher_Effect then item.UIRoot.WidgetSwitcher_Effect:SetWidgetVisibility(UEnums.ESlateVisibility.Collapsed) end
-                                if item.UIRoot.Image_Weapon then item.UIRoot.Image_Weapon:SetWidgetVisibility(UEnums.ESlateVisibility.Collapsed) end
-                                
-                                item:Show()
-                                item:RefreshData(UXOfficialteID, -1)
-                            end
-                        end
-                    end
-                    if subPanel.HideRestBlocks then subPanel:HideRestBlocks(showCount) end
-                    if subPanel.UIRoot then
-                        subPanel.UIRoot.WrapBox_List:SetWidgetVisibility(UEnums.ESlateVisibility.Visible)
-                        subPanel.UIRoot.VerticalBox_Empty:SetWidgetVisibility(UEnums.ESlateVisibility.Collapsed)
-                    end
-                end
-            end)
-        end)
-    end
-end)
--- ==============================================================================
--- ================= KẾT THÚC LOGIC MOD EMOTE ===================================
