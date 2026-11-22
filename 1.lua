@@ -2155,7 +2155,11 @@ end
 local _grenadeDefaults = {
   GrenadeTracker = false,
   GrenadeGround = false,
-  GrenadeActive = false
+  GrenadeActive = false,
+  GrenadeGroundFrag = true,
+  GrenadeGroundSmoke = true,
+  GrenadeGroundMolotov = true,
+  GrenadeGroundStun = true
 }
 for _k, _v in pairs(_grenadeDefaults) do
   if A.Config[_k] == nil then A.Config[_k] = _v end
@@ -3132,7 +3136,16 @@ function GrenadeTracker.Draw(pc)
 
   local function drawList(list, isItem, maxDistance)
     for _, entry in ipairs(list or {}) do
+      local categoryEnabled = true
+      if isItem then
+        if entry.kind == 1 then categoryEnabled = A.Config.GrenadeGroundFrag == true
+        elseif entry.kind == 2 then categoryEnabled = A.Config.GrenadeGroundSmoke == true
+        elseif entry.kind == 3 then categoryEnabled = A.Config.GrenadeGroundMolotov == true
+        elseif entry.kind == 4 then categoryEnabled = A.Config.GrenadeGroundStun == true
+        else categoryEnabled = false end
+      end
       local actor = entry.actor
+      if categoryEnabled then
       if Around(actor) then
         pcall(function()
           local distance = player:GetDistanceTo(actor) / 100
@@ -3180,6 +3193,7 @@ function GrenadeTracker.Draw(pc)
               color, true, false, true, nil, scale, true)
           end
         end)
+      end
       end
     end
   end
@@ -4000,6 +4014,24 @@ function Menu.Wire()
       GetFunc = function() return A.Config.GrenadeActive == true end,
       SetFunc = function(c, v) A.Config.GrenadeActive = (v == true); return true end
     }
+    -- Per-type ground-loot filters; active thrown/projectile tracking is unchanged.
+    local groundFilters = {
+      { key = "ModMenu_GrenadeGroundFrag", text = "      Ground: Frag Grenade", config = "GrenadeGroundFrag" },
+      { key = "ModMenu_GrenadeGroundSmoke", text = "      Ground: Smoke Grenade", config = "GrenadeGroundSmoke" },
+      { key = "ModMenu_GrenadeGroundMolotov", text = "      Ground: Molotov", config = "GrenadeGroundMolotov" },
+      { key = "ModMenu_GrenadeGroundStun", text = "      Ground: Stun/Flash Grenade", config = "GrenadeGroundStun" }
+    }
+    for _, filter in ipairs(groundFilters) do
+      local configKey = filter.config
+      weaponStack[#weaponStack + 1] = {
+        Key = filter.key,
+        UI = AliasMap.Switcher,
+        Text = filter.text,
+        ExpandHandle = "ModMenu_GrenadeGround",
+        GetFunc = function() return A.Config[configKey] == true end,
+        SetFunc = function(c, v) A.Config[configKey] = (v == true); return true end
+      }
+    end
 
     local T = function(_, english) return english end
         local StackAimbotV2 = {
