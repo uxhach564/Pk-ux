@@ -4000,9 +4000,10 @@ function Menu.Wire()
     }
     weaponStack[#weaponStack + 1] = {
       Key = "ModMenu_GrenadeGround",
-      UI = AliasMap.Switcher,
+      UI = AliasMap.TitleSwitcher,
       Text = "   Show Grenades On Ground",
       ExpandHandle = "ModMenu_GrenadeTracker",
+      ExpandIndex = 0,
       GetFunc = function() return A.Config.GrenadeGround == true end,
       SetFunc = function(c, v) A.Config.GrenadeGround = (v == true); return true end
     }
