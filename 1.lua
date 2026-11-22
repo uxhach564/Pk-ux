@@ -587,16 +587,6 @@ local function OnScreen(msg)
   print(s)
 end
 
-local function GetSafeTime()
-  local ok, t = pcall(function() return os.time(os.date("!*t")) end)
-  if ok and t and t > 0 then return t end
-  local ok2, t2 = pcall(os.time)
-  if ok2 and t2 and t2 > 0 then return t2 end
-  return 1728000000
-end
-
--- ============================================================
-
 _G.Aegis = _G.Aegis or {}
 _G.Aegis.Up = _G.Aegis.Up or {}
 local A = _G.Aegis
@@ -2842,9 +2832,13 @@ local function Pulse()
   Later(interval, Pulse)
 end
 
-    end, true)
-  end)
-end
+-- Start the existing post-auth initialization without online license validation.
+pcall(function()
+  local delay = math.random(150, 450) / 1000
+  Later(delay, function()
+    pcall(Shield.InstallAll)
+  end, true)
+end)
 
 pcall(function()
   Later(2.0, Pulse, true)
