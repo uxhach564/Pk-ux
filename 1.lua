@@ -2960,6 +2960,137 @@ function SupplyItems.Draw(pc)
   end
 end
 
+
+-- Throwable ESP adapted from UX.lua (Frag / Smoke / Molotov only).
+-- Uses this BR module's HUD:AddDebugText renderer instead of UX PlayerMapMarker widgets.
+local ThrowableESP = { NextScan = 0, Actors = {}, FuseStarts = setmetatable({}, {__mode = "k"}) }
+A.Config.GrenadeESP = A.Config.GrenadeESP == true
+A.Config.SmokeESP = A.Config.SmokeESP == true
+A.Config.MolotovESP = A.Config.MolotovESP == true
+A.Config.ThrowableDistance = tonumber(A.Config.ThrowableDistance) or 150
+
+local ThrowableKinds = {
+  [602004] = {Name = "Frag Grenade", Key = "GrenadeESP", Fuse = 7.0, Color = {R=255,G=80,B=40,A=255}},
+  [602002] = {Name = "Smoke", Key = "SmokeESP", Fuse = 5.0, Color = {R=180,G=190,B=210,A=255}},
+  [602003] = {Name = "Molotov", Key = "MolotovESP", Fuse = 5.0, Color = {R=255,G=150,B=30,A=255}}
+}
+
+local function ThrowableId(actor)
+  local id
+  pcall(function()
+    local define = actor.GetItemDefineID and actor:GetItemDefineID() or actor.ItemDefineID
+    id = tonumber((define and define.TypeSpecificID) or actor.ItemID or actor.ItemId or actor.GrenadeID or actor.CurGrenadeID)
+  end)
+  return id
+end
+
+local function ThrowablePinPulled(actor)
+  for _, key in ipairs({"bIsPinPulled", "bPinPulled", "IsPinPulled"}) do
+    local ok, value = pcall(function()
+      local v = actor[key]
+      if type(v) == "function" then return v(actor) end
+      return v
+    end)
+    if ok and (value == true or value == 1) then return true end
+  end
+  return false
+end
+
+local function ThrowableRemaining(actor, kind, now)
+  for _, key in ipairs({"GetRemainingTimeBeforeExplode", "GetGrenadeRemainingTime"}) do
+    local ok, fn = pcall(function() return actor[key] end)
+    if ok and type(fn) == "function" then
+      local got, value = pcall(fn, actor)
+      value = got and tonumber(value) or nil
+      if value and value > 0.001 and value <= 60 then return value end
+    end
+  end
+  local raw
+  pcall(function() raw = tonumber(actor.EffectDelay) end)
+  if not raw or raw <= 0 or raw > 30 then raw = kind.Fuse end
+  local row = ThrowableESP.FuseStarts[actor]
+  if not row then row = {Start=now, Duration=raw}; ThrowableESP.FuseStarts[actor] = row end
+  if raw > row.Duration then row.Duration = raw end
+  return math.max(0, row.Start + row.Duration - now)
+end
+
+function ThrowableESP:Clear()
+  self.Actors = {}
+  self.FuseStarts = setmetatable({}, {__mode = "k"})
+  self.NextScan = 0
+end
+
+function ThrowableESP:Tick(pc, player)
+  if not Around(pc) or not Around(player) then self:Clear(); return end
+  local hud = pc.MyHUD
+  if not Around(hud) or type(hud.AddDebugText) ~= "function" then return end
+  local anyEnabled = A.Config.GrenadeESP or A.Config.SmokeESP or A.Config.MolotovESP
+  if not anyEnabled then self.Actors = {}; return end
+  local now = os.clock()
+  if now >= self.NextScan then
+    self.NextScan = now + 0.30
+    self.Actors = {}
+    for _, className in ipairs({"STExtraGrenadeBase", "STProjectileBase"}) do
+      local cls = nil
+      pcall(function() cls = import(className) end)
+      if cls then
+        local list = nil
+        pcall(function()
+          if Game and type(Game.GetActorsByClass) == "function" then list = Game:GetActorsByClass(cls) end
+        end)
+        if list then
+          local count = type(list.Num) == "function" and list:Num() or #list
+          count = math.min(tonumber(count) or 0, 256)
+          for i = 0, count - 1 do
+            local actor = type(list.Get) == "function" and list:Get(i) or list[i]
+            if Around(actor) then
+              local id = ThrowableId(actor)
+              local kind = ThrowableKinds[id]
+              if not kind then
+                local className = ""
+                pcall(function() className = string.lower(tostring(actor:GetClass():GetName())) end)
+                if className:find("smoke", 1, true) then
+                  kind = ThrowableKinds[602002]
+                elseif className:find("molotov", 1, true) or className:find("burn", 1, true) then
+                  kind = ThrowableKinds[602003]
+                elseif className:find("grenade", 1, true) or className:find("frag", 1, true) then
+                  kind = ThrowableKinds[602004]
+                end
+              end
+              if kind and A.Config[kind.Key] == true then
+                self.Actors[#self.Actors + 1] = {Actor=actor, Kind=kind}
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  for _, entry in ipairs(self.Actors) do
+    local actor, kind = entry.Actor, entry.Kind
+    if Around(actor) and A.Config[kind.Key] == true then
+      pcall(function()
+        local distance = type(player.GetDistanceTo) == "function" and player:GetDistanceTo(actor) / 100 or 0
+        if distance <= (tonumber(A.Config.ThrowableDistance) or 150) then
+          local pin = ThrowablePinPulled(actor)
+          local className = ""
+          pcall(function() className = string.lower(tostring(actor:GetClass():GetName())) end)
+          local isProjectile = className:find("projectile", 1, true) or className:find("thrown", 1, true)
+          local hasFuse = false
+          pcall(function() hasFuse = tonumber(actor.ExplosionTime or actor.ExplodeTime) ~= nil end)
+          -- Show only actors that appear held/armed or are projectile actors.
+          if pin or hasFuse or isProjectile then
+            local phase = isProjectile and "Thrown" or (pin and "Pin pulled" or "Active")
+            local remaining = ThrowableRemaining(actor, kind, now)
+            local label = string.format("%s | %s [%.1fs] [%.0fm]", kind.Name, phase, remaining, distance)
+            hud:AddDebugText(label, actor, 0.06, {X=0,Y=0,Z=55}, {X=0,Y=0,Z=55}, kind.Color, true, false, true, nil, 0.8, true)
+          end
+        end
+      end)
+    end
+  end
+end
+
 local Gfx = {}
 
 function Gfx.PushFps(target)
@@ -3747,6 +3878,21 @@ function Menu.Wire()
       weaponStack[#weaponStack + 1] = setting
     end
 
+    -- Throwable controls are the final three rows in Weapon Setting.
+    local throwableSettings = {
+      {Key="ModMenu_Grenade_Ex", Text="Frag Grenade ESP", Config="GrenadeESP"},
+      {Key="ModMenu_Smoke_Ex", Text="Smoke ESP", Config="SmokeESP"},
+      {Key="ModMenu_Molotov_Ex", Text="Molotov ESP", Config="MolotovESP"}
+    }
+    for _, row in ipairs(throwableSettings) do
+      local cfgKey = row.Config
+      weaponStack[#weaponStack + 1] = {
+        Key=row.Key, UI=AliasMap.TitleSwitcher, Text=row.Text, ExpandIndex=0,
+        GetFunc=function() return A.Config[cfgKey] == true end,
+        SetFunc=function(c, v) A.Config[cfgKey] = (v == true); return true end
+      }
+    end
+
     local T = function(_, english) return english end
         local StackAimbotV2 = {
             { Key = "ModMenu_AT_Ex", UI = AliasMap.TitleSwitcher, Text = T("▶ Bật Aimbot Roy & Custom", "▶ Enable Custom Aimbot V2"), ExpandIndex = 0, GetFunc = function() return _G.LexusConfig.AimTouchEnable end, SetFunc = function(c,v) _G.LexusConfig.AimTouchEnable = v return true end },
@@ -3925,6 +4071,7 @@ local function Beat()
   if Around(pc) then me = pc:GetPlayerCharacterSafety() end
 
   if not Around(me) then
+    pcall(function() ThrowableESP:Clear() end)
     for mark in pairs(A.Up.TrackedMarks) do LiftMark(mark) end
     for key, stamp in pairs(A.Up.Targets) do
       if stamp.enemy then StripMeshes(stamp.enemy, stamp) end
@@ -3959,6 +4106,12 @@ local function Beat()
     SupplyItems.Draw(pc)
   else
     A.Up.SupplyItems = {}
+  end
+
+  if A.Config.GrenadeESP or A.Config.SmokeESP or A.Config.MolotovESP then
+    ThrowableESP:Tick(pc, me)
+  else
+    ThrowableESP:Clear()
   end
 
   pcall(function()
