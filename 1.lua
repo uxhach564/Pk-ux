@@ -3848,8 +3848,16 @@ end)()
                 local setForeground=member(d.Input,"SetForegroundColor")
                 if type(setForeground)=="function" then setForeground(d.Input,fg) end
                 pcall(function() d.Input:SetHintText("Enter your key") end)
-                -- Keep the key masked by default; the eye control reveals it only on demand.
-                pcall(function() d.Input:SetIsPassword(true) end)
+                -- Prefer the native password flag. Some SLua builds expose it as a
+                -- method, others as a writable property; the text-mask fallback below
+                -- keeps the key hidden even when neither native binding is available.
+                d.KeyVisible=false
+                d.SecretKey=key or ""
+                -- Use a real text-mask fallback consistently: this avoids relying
+                -- on SetIsPassword, which is exposed inconsistently by game builds.
+                d.UsingMaskFallback=true
+                pcall(function() d.Input:SetText(string.rep("*",#d.SecretKey)) end)
+                pcall(function() d.Input:SetIsReadOnly(true) end)
                 visibility(d.Input,enums.Visible);add(d.Input,23,107,W-100,35,8,true)
                 d.Hint=text("Your key is saved automatically",22,149,W-44,19,11,burgundy,7,false,false)
                 d.Status=text(status or "Enter your key",22,170,W-44,23,11,burgundy,8,false,false,true)
@@ -3891,23 +3899,37 @@ end)()
                 panel(W-70,108,43,34,7,{{5,40,92},{10,93,192},{4,46,108}},5,12)
                 pcall(function() d.EyeButton:SetBackgroundColor(color(255,255,255,0)) end)
                 visibility(d.EyeButton,enums.Visible)
-                d.EyeLabel=make("TextBlock",d.EyeButton)
-                d.EyeLabel:SetText("◉")
-                style(d.EyeLabel,17,color(190,235,255),true)
-                visibility(d.EyeLabel,passive)
-                local eyeSlot=d.EyeButton:AddChild(d.EyeLabel)
-                pcall(function() eyeSlot:SetHorizontalAlignment(2);eyeSlot:SetVerticalAlignment(2) end)
+                -- Draw a recognizable eye (outline + pupil) rather than a font
+                -- symbol, because some game fonts do not contain eye glyphs.
                 add(d.EyeButton,W-70,108,43,34,10,true)
+                local ex,ey=W-48.5,125
+                local eyeColor=color(190,235,255)
+                line(ex-11,ey,ex-5,ey-5,2,eyeColor,12)
+                line(ex-5,ey-5,ex,ey-7,2,eyeColor,12)
+                line(ex,ey-7,ex+5,ey-5,2,eyeColor,12)
+                line(ex+5,ey-5,ex+11,ey,2,eyeColor,12)
+                line(ex+11,ey,ex+5,ey+5,2,eyeColor,12)
+                line(ex+5,ey+5,ex,ey+7,2,eyeColor,12)
+                line(ex,ey+7,ex-5,ey+5,2,eyeColor,12)
+                line(ex-5,ey+5,ex-11,ey,2,eyeColor,12)
+                rect(ex-2,ey-2,4,4,eyeColor,13,1)
+                rect(ex-1,ey-1,2,2,color(5,40,92),14,1)
                 d.EyeEvent=d.EyeButton.OnClicked
                 d.EyeHandle=d.EyeEvent:Add(function()
                     if not d.Visible then return end
-                    d.KeyVisible=not d.KeyVisible
-                    local okToggle=pcall(function() d.Input:SetIsPassword(not d.KeyVisible) end)
-                    if not okToggle then
-                        d.KeyVisible=not d.KeyVisible
-                        return
+                    if not d.KeyVisible then
+                        -- Reveal: restore the real key before enabling editing.
+                        pcall(function() d.Input:SetText(d.SecretKey or "") end)
+                        pcall(function() d.Input:SetIsReadOnly(false) end)
+                        d.KeyVisible=true
+                    else
+                        -- Hide: preserve the entered value and mask the visible text.
+                        local okRead,current=pcall(function() return d.Input:GetText() end)
+                        if okRead and type(current)=="string" then d.SecretKey=current end
+                        pcall(function() d.Input:SetText(string.rep("*",#(d.SecretKey or ""))) end)
+                        pcall(function() d.Input:SetIsReadOnly(true) end)
+                        d.KeyVisible=false
                     end
-                    d.EyeLabel:SetText(d.KeyVisible and "◎" or "◉")
                 end)
                 d.GetKeyButton=makeActionButton("GET KEY",23,color(255,211,76))
                 d.GetKeyEvent=d.GetKeyButton.OnClicked
@@ -3936,6 +3958,12 @@ end)()
                 d.Handle=d.Event:Add(function()
                     if not d.Visible or d.Busy then return end
                     local okRead,k=pcall(function() return d.Input:GetText() end)
+                    if d.UsingMaskFallback and not d.KeyVisible then
+                        k=d.SecretKey or ""
+                        okRead=true
+                    elseif okRead and type(k)=="string" and d.KeyVisible then
+                        d.SecretKey=k
+                    end
                     if not okRead or type(k)~="string" then return end
                     k=k:match("^%s*(.-)%s*$")
                     if #k==0 or #k>512 then d.Status:SetText("Enter a valid key");return end
