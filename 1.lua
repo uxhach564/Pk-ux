@@ -1254,46 +1254,208 @@ local WpnColors = {
   Melee = {R=150, G=150, B=150, A=255},
   Special = {R=255, G=0, B=255, A=255},
   Scope = {R=0, G=0, B=255, A=255},
-  LuckyEgg = {R=255, G=0, B=0, A=255}
+  LuckyEgg = {R=255, G=0, B=0, A=255},
+  Grenade = {R=0, G=180, B=255, A=255},
+  Med = {R=255, G=255, B=255, A=255},
+  Helmet = {R=255, G=0, B=150, A=255},
+  Vest = {R=255, G=0, B=150, A=255},
+  Bag = {R=255, G=0, B=150, A=255},
+  Ammo = {R=255, G=255, B=255, A=255},
+  ShopToken = {R=255, G=255, B=255, A=255},
+  GasCan = {R=255, G=0, B=0, A=255}
 }
 local WpnDb = {
-  [101001] = {"AKM","AR"}, [101002] = {"M16A4","AR"}, [101003] = {"SCAR-L","AR"},
-  [101004] = {"M416","AR"}, [101005] = {"Groza","AR"}, [101006] = {"AUG","AR"},
-  [101007] = {"QBZ","AR"}, [101008] = {"M762","AR"}, [101009] = {"Mk47 Mutant","AR"},
-  [101010] = {"G36C","AR"}, [101011] = {"AC-VAL","AR"}, [101012] = {"Honey Badger","AR"},
-  [101100] = {"FAMAS","AR"}, [101101] = {"ASM Abakan AR","AR"}, [101102] = {"ACE32","AR"},
-  [102001] = {"UZI","SMG"}, [102002] = {"UMP45","SMG"}, [102003] = {"Vector","SMG"},
-  [102004] = {"Thompson SMG","SMG"}, [102005] = {"PP-19 Bizon","SMG"}, [102007] = {"MP5K","SMG"},
-  [102008] = {"JS9","SMG"}, [102105] = {"P90","SMG"},
-  [103001] = {"Kar98K","Sniper"}, [103002] = {"M24","Sniper"}, [103003] = {"AWM","Sniper"},
-  [103004] = {"SKS","Sniper"}, [103005] = {"VSS","Sniper"}, [103006] = {"Mini14","Sniper"},
-  [103007] = {"Mk14","Sniper"}, [103008] = {"Win94","Sniper"}, [103009] = {"SLR","Sniper"},
-  [103010] = {"QBU","Sniper"}, [103011] = {"Mosin Nagant","Sniper"}, [103012] = {"AMR","Sniper"},
-  [103100] = {"Mk12","Sniper"}, [103101] = {"TR-2A Air Gun","Sniper"}, [103102] = {"DSR","Sniper"},
-  [103103] = {"Sniper Rifle","Sniper"}, [103104] = {"Sniper Rifle","Sniper"}, [103105] = {"SR","Sniper"},
-  [104001] = {"S686","Shotgun"}, [104002] = {"S1897","Shotgun"}, [104003] = {"S12K","Shotgun"},
-  [104004] = {"DBS","Shotgun"}, [104100] = {"SPAS-12","Shotgun"}, [104101] = {"M1014","Shotgun"},
+  [101001] = {"AKM","AR"},
+  [101002] = {"M16A4","AR"},
+  [101003] = {"SCAR-L","AR"},
+  [101004] = {"M416","AR"},
+  [101005] = {"Groza","AR"},
+  [101006] = {"AUG","AR"},
+  [101007] = {"QBZ","AR"},
+  [101008] = {"M762","AR"},
+  [101009] = {"Mk47 Mutant","AR"},
+  [101010] = {"G36C","AR"},
+  [101011] = {"AC-VAL","AR"},
+  [101012] = {"Honey Badger","AR"},
+  [101100] = {"FAMAS","AR"},
+  [101101] = {"ASM Abakan","AR"},
+  [101102] = {"ACE32","AR"},
+  [102001] = {"UZI","SMG"},
+  [102002] = {"UMP45","SMG"},
+  [102003] = {"Vector","SMG"},
+  [102004] = {"Thompson SMG","SMG"},
+  [102005] = {"PP-19 Bizon","SMG"},
+  [102007] = {"MP5K","SMG"},
+  [102008] = {"JS9","SMG"},
+  [102105] = {"P90","SMG"},
+  [103001] = {"Kar98K","Sniper"},
+  [103002] = {"M24","Sniper"},
+  [103003] = {"AWM","Sniper"},
+  [103004] = {"SKS","Sniper"},
+  [103005] = {"VSS","Sniper"},
+  [103006] = {"Mini14","Sniper"},
+  [103007] = {"Mk14","Sniper"},
+  [103008] = {"Win94","Sniper"},
+  [103009] = {"SLR","Sniper"},
+  [103010] = {"QBU","Sniper"},
+  [103011] = {"Mosin-Nagant Sniper Rifle","Sniper"},
+  [103012] = {"AMR","Sniper"},
+  [103100] = {"Mk12","Sniper"},
+  [103101] = {"TR-2A Air Gun","Sniper"},
+  [103102] = {"DSR","Sniper"},
+  [103103] = {"M1 Garand","Sniper"},
+  [103104] = {"Sniper Rifle","Sniper"},
+  [103105] = {"SR","Sniper"},
+  [104001] = {"S686","Shotgun"},
+  [104002] = {"S1897","Shotgun"},
+  [104003] = {"S12K","Shotgun"},
+  [104004] = {"DBS","Shotgun"},
+  [104100] = {"SPAS-12 Shotgun","Shotgun"},
+  [104101] = {"M1014","Shotgun"},
   [104102] = {"NS2000","Shotgun"},
-  [105001] = {"M249","LMG"}, [105002] = {"DP-28","LMG"}, [105003] = {"M134","LMG"},
+  [105001] = {"M249","LMG"},
+  [105002] = {"DP-28","LMG"},
+  [105003] = {"M134","LMG"},
+  [105004] = {"Flamethrower","LMG"},
+  [105006] = {"M2 Fixed Machine Gun","LMG"},
+  [105007] = {"Gatling Fixed Machine Gun","LMG"},
+  [105008] = {"Mounted Flamethrower","LMG"},
+  [105009] = {"M2 Mounted Machine Gun","LMG"},
   [105010] = {"MG3","LMG"},
-  [106001] = {"P92","Pistol"}, [106002] = {"P1911","Pistol"}, [106003] = {"R1895","Pistol"},
-  [106004] = {"P18C","Pistol"}, [106005] = {"R45","Pistol"}, [106006] = {"Sawed-off","Pistol"},
-  [106008] = {"Skorpion","Pistol"}, [106010] = {"Desert Eagle","Pistol"},
-  [106007] = {"Flare Gun","Pistol"}, [106009] = {"Flare Gun","Pistol"},
-  [107001] = {"Crossbow","Special"}, [107002] = {"RPG-7","Special"}, [107003] = {"Riot Shield","Special"},
-  [108001] = {"Machete","Melee"}, [108002] = {"Crowbar","Melee"}, [108003] = {"Sickle","Melee"},
-  [108004] = {"Pan","Melee"}, [108005] = {"Dagger","Melee"},
-  [203001] = {"Red Dot Sight","Scope"}, [203002] = {"Holographic Sight","Scope"}, [203003] = {"2x Scope","Scope"},
-  [203004] = {"4x Scope","Scope"}, [203005] = {"8x Scope","Scope"}, [203014] = {"3x Scope","Scope"},
+  [105101] = {"Gatling","LMG"},
+  [105102] = {"Vehicle SG","LMG"},
+  [105103] = {"RPG","Special"},
+  [105104] = {"RPG","Special"},
+  [105106] = {"Tank Cannon","LMG"},
+  [105107] = {"Tank Machine Gun","LMG"},
+  [105108] = {"Tank Flare Gun","LMG"},
+  [105115] = {"Library Gatling Fixed Machine Gun","LMG"},
+  [105116] = {"Library Autocannon","LMG"},
+  [105118] = {"Fighter Jet Autocannon","LMG"},
+  [106001] = {"P92","Pistol"},
+  [106002] = {"P1911","Pistol"},
+  [106003] = {"R1895","Pistol"},
+  [106004] = {"P18C","Pistol"},
+  [106005] = {"R45","Pistol"},
+  [106006] = {"Sawed-off","Pistol"},
+  [106007] = {"Flare Gun","Pistol"},
+  [106008] = {"Skorpion","Pistol"},
+  [106009] = {"Flare Gun","Pistol"},
+  [106010] = {"Desert Eagle","Pistol"},
+  [106011] = {"Dual MP7","Pistol"},
+  [106012] = {"Welding Gun","Pistol"},
+  [106013] = {"Stun Gun","Pistol"},
+  [106101] = {"Rare Vehicle Flare Gun","Pistol"},
+  [106103] = {"Flare Gun (Special)","Pistol"},
+  [106106] = {"Flare Gun (Empty)","Pistol"},
+  [106107] = {"Respawn Flare Gun","Pistol"},
+  [106203] = {"Magnet Gun","Pistol"},
+  [107001] = {"Crossbow","Special"},
+  [107002] = {"RPG-7","Special"},
+  [107003] = {"Riot shield","Special"},
+  [107004] = {"Combat Drone","Special"},
+  [107005] = {"Panzerfaust","Special"},
+  [107006] = {"RPG-7","Special"},
+  [107007] = {"Tactical Crossbow","Special"},
+  [107008] = {"Explosive Bow","Special"},
+  [107009] = {"Explosive Bow","Special"},
+  [107010] = {"M79 Smoke Grenade Launcher","Special"},
+  [107020] = {"Explosive Crossbow","Special"},
+  [107031] = {"Super Summer Grenade Launcher","Special"},
+  [107032] = {"Super Summer Bazooka","Special"},
+  [107033] = {"Super Summer Machine Gun","Special"},
+  [107034] = {"Super Color Bazooka","Special"},
+  [107035] = {"Super Bubble Machine Gun","Special"},
+  [107036] = {"Snowball Blaster","Special"},
+  [107037] = {"Water Orb Blaster","Special"},
+  [107092] = {"MGL","Special"},
+  [107093] = {"M202 Quadruple RPG","Special"},
+  [107094] = {"AT4-A Laser Missile","Special"},
+  [107095] = {"M202 Quadruple RPG","Special"},
+  [107096] = {"M79 Sawed-off","Special"},
+  [107097] = {"M79","Special"},
+  [107098] = {"MGL","Special"},
+  [107099] = {"M3E1-A","Special"},
+  [107901] = {"Zombie Piercer","Special"},
+  [107911] = {"M3E1-B Missile Launcher","Special"},
+  [108001] = {"Machete","Melee"},
+  [108002] = {"Crowbar","Melee"},
+  [108003] = {"Sickle","Melee"},
+  [108004] = {"Pan","Melee"},
+  [108005] = {"Dagger","Melee"},
+  [108006] = {"Mutation Blade","Melee"},
+  [108007] = {"Mutation Gauntlets","Melee"},
+  [203001] = {"Red Dot Sight","Scope"},
+  [203002] = {"Holographic Sight","Scope"},
+  [203003] = {"2x Scope","Scope"},
+  [203004] = {"4x Scope","Scope"},
+  [203005] = {"8x Scope","Scope"},
+  [203014] = {"3x Scope","Scope"},
   [203015] = {"6x Scope","Scope"},
+  [301001] = {"9mm","Ammo"},
+  [302001] = {"7.62mm","Ammo"},
+  [303001] = {"5.56mm","Ammo"},
+  [304001] = {"12 Gauge","Ammo"},
+  [305001] = {".45 ACP","Ammo"},
+  [306001] = {".300 Magnum","Ammo"},
+  [307001] = {"Bolt","Ammo"},
+  [307002] = {"Rocket","Ammo"},
+  [307099] = {"40mm Grenade","Ammo"},
+  [403045] = {"Ghillie Suit","Special"},
+  [403187] = {"Ghillie Suit (Desert)","Special"},
+  [403989] = {"Ghillie Suit (Snow)","Special"},
+  [403990] = {"Ghillie Suit (Dark Brown)","Special"},
+  [501001] = {"Backpack (Lv. 1)","Bag"},
+  [501002] = {"Backpack (Lv. 2)","Bag"},
+  [501004] = {"Backpack (Lv. 1)","Bag"},
+  [501006] = {"Backpack (Lv. 3)","Bag"},
+  [502001] = {"Motorcycle Helmet (Lv. 1)","Helmet"},
+  [502002] = {"Military Helmet (Lv. 2)","Helmet"},
+  [502003] = {"Spetsnaz Helmet (Lv. 3)","Helmet"},
+  [502004] = {"Motorcycle Helmet (Lv. 1)","Helmet"},
+  [503001] = {"Police Vest (Lv. 1)","Vest"},
+  [503002] = {"Police Vest (Lv. 2)","Vest"},
+  [503003] = {"Military Vest (Lv. 3)","Vest"},
+  [601001] = {"Energy Drink","Med"},
+  [601002] = {"Adrenaline Syringe","Med"},
+  [601003] = {"Painkillers","Med"},
+  [601004] = {"Bandages","Med"},
+  [601005] = {"First Aid Kit","Med"},
+  [601006] = {"Med Kit","Med"},
+  [601009] = {"Fast Bandages","Med"},
+  [601010] = {"Fast First Aid Kit","Med"},
+  [601011] = {"Military Bandage","Med"},
+  [601012] = {"Concentrated Energy Drink","Med"},
+  [601020] = {"Bandages","Med"},
+  [601021] = {"First Aid Kit","Med"},
+  [601022] = {"Med Kit","Med"},
+  [601023] = {"Adrenaline Syringe","Med"},
+  [601061] = {"Med Kit","Med"},
+  [601077] = {"Tactical First Aid Set","Med"},
+  [601078] = {"Almighty First Aid Kit","Med"},
+  [601079] = {"Almighty Med Kit","Med"},
+  [601080] = {"Military Bandage","Med"},
+  [601081] = {"Concentrated Energy Drink","Med"},
+  [601084] = {"Fast First Aid Kit","Med"},
+  [601085] = {"Fast Med Kit","Med"},
+  [601095] = {"Self AED","Med"},
+  [601096] = {"Battle Ready Kit","Med"},
+  [602001] = {"Stun Grenade","Grenade"},
+  [602002] = {"Smoke Grenade","Grenade"},
+  [602003] = {"Molotov Cocktail","Grenade"},
+  [602004] = {"Frag Grenade","Grenade"},
+  [602054] = {"Medical Supply Kit","Med"},
+  [602069] = {"Emergency Pickup","Med"},
+  [603001] = {"Fuel Battery Pack","GasCan"},
   [2230001] = {"Lv. 1 Lucky Egg","LuckyEgg"},
   [2230002] = {"Lv. 2 Lucky Egg","LuckyEgg"},
   [2230003] = {"Lv. 3 Lucky Egg","LuckyEgg"},
-  [2230004] = {"Lv. 4 Lucky Egg","LuckyEgg"}
+  [2230004] = {"Lv. 4 Lucky Egg","LuckyEgg"},
+  [3000324] = {"Shop Token","ShopToken"}
 }
 
 -- Weapon category and per-item switches. Numeric IDs are internal only; UI labels use names.
-local WpnCategoryOrder = {"AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "LuckyEgg"}
+local WpnCategoryOrder = {"AR", "SMG", "Sniper", "Shotgun", "LMG", "Pistol", "Melee", "Special", "Scope", "Grenade", "Med", "Helmet", "Vest", "Bag", "Ammo", "ShopToken", "GasCan", "LuckyEgg"}
 local function WpnCategoryConfigKey(category)
   return "WeaponCategory_" .. category
 end
@@ -2414,46 +2576,7 @@ function Menu.Wire()
         GetFunc = function() return A.Config.Weapons == true end,
         SetFunc = function(c, v) A.Config.Weapons = (v == true); return true end },
     }
-    for _, category in ipairs(WpnCategoryOrder) do
-      local categoryName = category
-      local categoryKey = "ModMenu_WeaponCategory_" .. categoryName
-      table.insert(weaponStack, {
-        Key = categoryKey, UI = AliasMap.TitleSwitcher, Text = categoryName,
-        ExpandIndex = 0,
-        GetFunc = function() return IsWeaponCategoryEnabled(categoryName) end,
-        SetFunc = function(c, v)
-          A.Config[WpnCategoryConfigKey(categoryName)] = v == true
-          return true
-        end
-      })
-
-      local itemIds = {}
-      for weaponId, info in pairs(WpnDb) do
-        if info[2] == categoryName then
-          itemIds[#itemIds + 1] = weaponId
-        end
-      end
-      table.sort(itemIds, function(a, b)
-        local nameA, nameB = WpnDb[a][1], WpnDb[b][1]
-        if nameA == nameB then return a < b end
-        return nameA < nameB
-      end)
-
-      for _, weaponId in ipairs(itemIds) do
-        local id = weaponId
-        table.insert(weaponStack, {
-          Key = "ModMenu_WeaponItem_" .. tostring(id),
-          UI = AliasMap.Switcher,
-          Text = WpnDb[id][1],
-          ExpandHandle = categoryKey,
-          GetFunc = function() return IsWeaponItemEnabled(id) end,
-          SetFunc = function(c, v)
-            A.Config[WpnItemConfigKey(id)] = v == true
-            return true
-          end
-        })
-      end
-    end
+    -- Individual ID controls are grouped at the bottom under Weapon IDs.
 
     -- AirDrop and Loot Crate controls are appended to the bottom of Weapon Setting.
     local supplyStack = {
@@ -2581,6 +2704,57 @@ function Menu.Wire()
             { Key = "ModMenu_AT_Mortar_FOV", UI = AliasMap.Slider, Text = T("      Vòng FOV (1-360)", "      FOV Radius (1-360)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 1, MaxValue = 360, min = 1, max = 360, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarFOV or 360 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarFOV = v return true end },
             { Key = "ModMenu_AT_Mortar_Pred", UI = AliasMap.Slider, Text = T("      Dự Đoán Hướng Chạy (0-100)", "      Prediction Value (0-100)"), ExpandHandle = "ModMenu_AT_Mortar_Ex", MinValue = 0, MaxValue = 100, min = 0, max = 100, GetFunc = function() return _G.LexusState.CustomTextData.AimTouchMortarPred or 0 end, SetFunc = function(c,v) _G.LexusState.CustomTextData.AimTouchMortarPred = v return true end }
         }
+
+    -- Final expandable Weapon IDs setting: category toggles plus one ON/OFF
+    -- switch for every item ID in the imported source database.
+    weaponStack[#weaponStack + 1] = {
+      Key = "ModMenu_WeaponIDs",
+      UI = AliasMap.TitleSwitcher,
+      Text = "Weapon IDs",
+      ExpandIndex = 0,
+      GetFunc = function() return A.Config.Weapons == true end,
+      SetFunc = function(c, v) A.Config.Weapons = (v == true); return true end
+    }
+    for _, category in ipairs(WpnCategoryOrder) do
+      local categoryName = category
+      local categoryKey = "ModMenu_WeaponIDs_Category_" .. categoryName
+      weaponStack[#weaponStack + 1] = {
+        Key = categoryKey,
+        UI = AliasMap.TitleSwitcher,
+        Text = "   " .. categoryName,
+        ExpandHandle = "ModMenu_WeaponIDs",
+        ExpandIndex = 0,
+        GetFunc = function() return IsWeaponCategoryEnabled(categoryName) end,
+        SetFunc = function(c, v)
+          A.Config[WpnCategoryConfigKey(categoryName)] = (v == true)
+          return true
+        end
+      }
+      local itemIds = {}
+      for weaponId, info in pairs(WpnDb) do
+        if info[2] == categoryName then itemIds[#itemIds + 1] = weaponId end
+      end
+      table.sort(itemIds, function(a, b)
+        local nameA, nameB = WpnDb[a][1], WpnDb[b][1]
+        if nameA == nameB then return a < b end
+        return nameA < nameB
+      end)
+      for _, weaponId in ipairs(itemIds) do
+        local id = weaponId
+        weaponStack[#weaponStack + 1] = {
+          Key = "ModMenu_WeaponIDs_Item_" .. tostring(id),
+          UI = AliasMap.Switcher,
+          Text = "      " .. WpnDb[id][1],
+          ExpandHandle = categoryKey,
+          GetFunc = function() return IsWeaponItemEnabled(id) end,
+          SetFunc = function(c, v)
+            A.Config[WpnItemConfigKey(id)] = (v == true)
+            return true
+          end
+        }
+      end
+    end
+
     -- Keep the V2 Aimboard controls in their own tab immediately to the right
     -- of Weapon Setting, instead of mixing them into the Visuals (ESP) list.
     pageDef.ModMenu = {
