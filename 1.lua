@@ -3769,15 +3769,17 @@ end)()
                 if center then pcall(function() w:SetJustification(1) end) end
                 return w
             end
-            local frame={{4,13,29},{8,68,146},{14,126,255}}
-            local bright={{57,104,163},{111,181,255},{195,225,255}}
-            local edge={{1,5,13},{5,22,49},{8,58,122}}
-            local body={{3,7,15},{7,20,39},{9,38,76}}
-            local header={{2,7,17},{6,27,61},{9,72,157}}
-            local gold={{13,47,92},{77,161,255},{13,88,181}}
-            local white=color(255,255,255)
-            local forest=color(231,243,255)
-            local burgundy=color(192,221,255)
+            -- Deep-space / Earth-horizon palette: midnight navy, orbital cyan,
+            -- restrained violet and warm gold highlights.
+            local frame={{3,8,28},{15,66,142},{44,190,255}}
+            local bright={{58,124,190},{104,205,255},{205,244,255}}
+            local edge={{1,3,16},{7,17,48},{16,53,105}}
+            local body={{2,5,19},{5,13,37},{8,29,66}}
+            local header={{2,6,23},{5,20,55},{10,54,112}}
+            local gold={{5,29,65},{20,126,194},{40,206,239}}
+            local white=color(245,250,255)
+            local forest=color(215,239,255)
+            local burgundy=color(151,211,245)
             -- Perimeter only: an opaque full-panel backing would destroy
             -- the requested body transparency even with alpha on the body.
             panel(6,6,W-12,H-12,10,body,2,24,.5)
@@ -3793,6 +3795,29 @@ end)()
             for _,s in ipairs({{W-13,1,W-1,13},{W-13,H-1,W-1,H-13}}) do line(s[1],s[2],s[3],s[4],2,color(154,211,255),3) end
             panel(10,10,W-20,65,16,gold,4,24,1)
             panel(13,13,W-26,59,14,header,5,32,1)
+            if not welcome then
+                -- Quiet star field across the glassy space panel.
+                local stars={{35,29,2},{72,91,1},{112,157,2},{154,24,1},{188,183,1},{224,92,2},{267,164,1},{302,28,2},{338,186,1},{374,91,1},{405,160,2},{462,91,1},{48,187,1},{286,75,1},{390,29,1},{440,185,2}}
+                for i,pt in ipairs(stars) do
+                    rect(pt[1],pt[2],pt[3],pt[3],i%4==0 and color(130,190,255) or color(90,171,235),3,0.8)
+                end
+                -- A small stylized Earth in the header, with orbital rings.
+                local cx,cy,rr=W-47,42,17
+                for i=0,35 do
+                    local a=i*math.pi/18
+                    local b=(i+1)*math.pi/18
+                    line(cx+math.cos(a)*27,cy+math.sin(a)*9,cx+math.cos(b)*27,cy+math.sin(b)*9,1,color(71,174,245),4)
+                    line(cx+math.cos(a)*rr,cy+math.sin(a)*rr,cx+math.cos(b)*rr,cy+math.sin(b)*rr,1.5,color(100,211,255),6)
+                end
+                -- Abstract landmasses and a luminous polar highlight.
+                line(cx-9,cy-7,cx-3,cy-10,2,color(92,206,173),6)
+                line(cx-3,cy-10,cx+1,cy-5,2,color(92,206,173),6)
+                line(cx+1,cy-5,cx-2,cy+1,2,color(92,206,173),6)
+                line(cx-2,cy+1,cx-8,cy+3,2,color(92,206,173),6)
+                line(cx+5,cy+3,cx+10,cy+1,2,color(92,206,173),6)
+                line(cx+10,cy+1,cx+7,cy+8,2,color(92,206,173),6)
+                rect(cx-5,cy-13,5,2,color(210,242,255),7,0.9)
+            end
             if welcome then
                 d.Title=text("Welcome to @UX_Official Lua mod",24,22,W-48,42,19,white,7,true,true)
                 local pw=math.min(340,W-72);local px=(W-pw)/2
@@ -3801,10 +3826,10 @@ end)()
                 d.Detail=text("Kill limit 8-10",px+16,109,pw-32,34,23,white,7,true,true)
                 d.Hint=text("Play smart and avoid report",30,165,W-60,32,17,forest,7,true,true)
             else
-                d.Title=text("UXOfficial",22,15,W-44,31,24,white,7,true,true)
-                text("LOGIN",22,45,W-44,21,12,white,7,true,true)
-                line(W/2-118,56,W/2-47,56,1,color(224,242,255),7)
-                line(W/2+47,56,W/2+118,56,1,color(224,242,255),7)
+                d.Title=text("UX Official",48,15,W-112,31,24,white,7,true,true)
+                text("L O G I N",48,45,W-112,21,11,color(116,211,255),7,true,true)
+                line(W/2-118,56,W/2-70,56,1,color(88,185,245),7)
+                line(W/2+70,56,W/2+118,56,1,color(88,185,245),7)
                 text("LOGIN KEY",22,82,W-44,20,13,burgundy,7,true,false)
                 rail(27,104,W-54,2,gold,4,24)
                 rail(27,143,W-54,2,gold,4,24)
