@@ -3782,7 +3782,7 @@ end)()
             local burgundy=color(151,211,245)
             -- Perimeter only: an opaque full-panel backing would destroy
             -- the requested body transparency even with alpha on the body.
-            panel(6,6,W-12,H-12,10,body,2,24,.5)
+            panel(6,6,W-12,H-12,10,body,2,24,.76)
             rail(13,0,W-26,6,frame,3,24)
             rail(13,H-6,W-26,6,frame,3,24)
             rect(0,13,6,H-26,color(4,13,29),3)
@@ -3796,27 +3796,51 @@ end)()
             panel(10,10,W-20,65,16,gold,4,24,1)
             panel(13,13,W-26,59,14,header,5,32,1)
             if not welcome then
-                -- Quiet star field across the glassy space panel.
-                local stars={{35,29,2},{72,91,1},{112,157,2},{154,24,1},{188,183,1},{224,92,2},{267,164,1},{302,28,2},{338,186,1},{374,91,1},{405,160,2},{462,91,1},{48,187,1},{286,75,1},{390,29,1},{440,185,2}}
+                -- Restrained deep-space star field, kept behind all controls.
+                local stars={{24,28,2},{58,83,1},{94,31,1},{128,178,2},{166,21,1},{198,91,1},{236,169,2},{274,27,1},{315,78,2},{350,183,1},{386,30,1},{447,91,2},{42,191,1},{292,148,1},{468,181,1},{182,204,1},{72,147,1},{333,31,1}}
                 for i,pt in ipairs(stars) do
-                    rect(pt[1],pt[2],pt[3],pt[3],i%4==0 and color(130,190,255) or color(90,171,235),3,0.8)
+                    rect(pt[1],pt[2],pt[3],pt[3],i%4==0 and color(132,210,255) or color(86,158,226),3,.85)
                 end
-                -- A small stylized Earth in the header, with orbital rings.
-                local cx,cy,rr=W-47,42,17
+                -- Earth horizon: layered blue ocean scanlines, a fine atmosphere
+                -- rim and subtle continent contours. All geometry is native UMG.
+                local cx,cy,rr=W-104,151,82
+                for row=-rr,rr,4 do
+                    local half=math.sqrt(math.max(0,rr*rr-row*row))
+                    local x1=math.max(9,cx-half);local x2=math.min(W-9,cx+half)
+                    if x2>x1 then
+                        local t=(row+rr)/(2*rr)
+                        local ocean=t<.5 and {3,24,66} or {4,52,105}
+                        rect(x1,cy+row,x2-x1,3,color(ocean[1],ocean[2],ocean[3]),3,.82)
+                    end
+                end
+                -- Atmospheric halo and orbital arcs.
+                for i=0,71 do
+                    local a=i*math.pi/36;local b=(i+1)*math.pi/36
+                    line(cx+math.cos(a)*(rr+3),cy+math.sin(a)*(rr+3),cx+math.cos(b)*(rr+3),cy+math.sin(b)*(rr+3),1.6,color(64,184,255),4)
+                    if i%2==0 then
+                        line(cx+math.cos(a)*(rr+10),cy+math.sin(a)*27,cx+math.cos(b)*(rr+10),cy+math.sin(b)*27,1,color(43,125,218),3)
+                    end
+                end
+                -- Stylized landmasses, intentionally understated so text stays clear.
+                local land=color(38,139,128)
+                local continents={
+                    {{cx-39,cy-43},{cx-25,cy-49},{cx-13,cy-39},{cx-17,cy-25},{cx-8,cy-13},{cx-20,cy-4},{cx-31,cy-13},{cx-43,cy-27},{cx-39,cy-43}},
+                    {{cx+8,cy-48},{cx+27,cy-43},{cx+39,cy-30},{cx+31,cy-17},{cx+19,cy-13},{cx+17,cy+1},{cx+4,cy-5},{cx-1,cy-22},{cx+8,cy-48}},
+                    {{cx+20,cy+17},{cx+36,cy+12},{cx+44,cy+25},{cx+34,cy+40},{cx+18,cy+47},{cx+8,cy+33},{cx+20,cy+17}},
+                    {{cx-43,cy+18},{cx-29,cy+12},{cx-20,cy+24},{cx-25,cy+41},{cx-39,cy+37},{cx-43,cy+18}}
+                }
+                for _,poly in ipairs(continents) do
+                    for j=1,#poly-1 do line(poly[j][1],poly[j][2],poly[j+1][1],poly[j+1][2],2.2,land,5) end
+                end
+                -- Header emblem: clean orbital mark instead of a tiny clock-like glyph.
+                local hx,hy=W-37,42
                 for i=0,35 do
-                    local a=i*math.pi/18
-                    local b=(i+1)*math.pi/18
-                    line(cx+math.cos(a)*27,cy+math.sin(a)*9,cx+math.cos(b)*27,cy+math.sin(b)*9,1,color(71,174,245),4)
-                    line(cx+math.cos(a)*rr,cy+math.sin(a)*rr,cx+math.cos(b)*rr,cy+math.sin(b)*rr,1.5,color(100,211,255),6)
+                    local a=i*math.pi/18;local b=(i+1)*math.pi/18
+                    line(hx+math.cos(a)*13,hy+math.sin(a)*13,hx+math.cos(b)*13,hy+math.sin(b)*13,1.2,color(99,211,255),7)
                 end
-                -- Abstract landmasses and a luminous polar highlight.
-                line(cx-9,cy-7,cx-3,cy-10,2,color(92,206,173),6)
-                line(cx-3,cy-10,cx+1,cy-5,2,color(92,206,173),6)
-                line(cx+1,cy-5,cx-2,cy+1,2,color(92,206,173),6)
-                line(cx-2,cy+1,cx-8,cy+3,2,color(92,206,173),6)
-                line(cx+5,cy+3,cx+10,cy+1,2,color(92,206,173),6)
-                line(cx+10,cy+1,cx+7,cy+8,2,color(92,206,173),6)
-                rect(cx-5,cy-13,5,2,color(210,242,255),7,0.9)
+                rect(hx-2,hy-2,4,4,color(205,245,255),8,.95)
+                line(hx-20,hy+8,hx-14,hy+8,1,color(57,155,234),7)
+                line(hx+14,hy-8,hx+20,hy-8,1,color(57,155,234),7)
             end
             if welcome then
                 d.Title=text("Welcome to @UX_Official Lua mod",24,22,W-48,42,19,white,7,true,true)
@@ -3826,13 +3850,13 @@ end)()
                 d.Detail=text("Kill limit 8-10",px+16,109,pw-32,34,23,white,7,true,true)
                 d.Hint=text("Play smart and avoid report",30,165,W-60,32,17,forest,7,true,true)
             else
-                d.Title=text("UX Official",48,15,W-112,31,24,white,7,true,true)
-                text("L O G I N",48,45,W-112,21,11,color(116,211,255),7,true,true)
+                d.Title=text("UX Official",48,13,W-112,34,27,white,7,true,true)
+                text("P R E M I U M   L O G I N",48,46,W-112,18,9,color(116,211,255),7,true,true)
                 line(W/2-118,56,W/2-70,56,1,color(88,185,245),7)
                 line(W/2+70,56,W/2+118,56,1,color(88,185,245),7)
                 text("LOGIN KEY",22,82,W-44,20,13,burgundy,7,true,false)
-                rail(27,104,W-54,2,gold,4,24)
-                rail(27,143,W-54,2,gold,4,24)
+                rail(27,104,W-54,2,bright,4,24)
+                rail(27,143,W-54,2,bright,4,24)
                 rect(20,111,2,27,color(13,47,92),4)
                 rect(W-22,111,2,27,color(13,88,181),4)
                 line(20,111,27,104,2,color(77,161,255),4)
