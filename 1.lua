@@ -1485,37 +1485,84 @@ function Weapons.Scan(pc)
     if A.Up.WpnScanAt and (now - A.Up.WpnScanAt) < 1.0 then return end
     A.Up.WpnScanAt = now
     A.Up.NearbyWeapons = {}
+
     local player = pc:GetPlayerCharacterSafety()
     if not Around(player) then return end
-    local cls = import("PickUpWrapperActor") or import("STPickupWrapperActor")
-    if not cls then return end
-    local list = nil
-    pcall(function()
-      if Game.GetActorsByClass then
-        list = Game:GetActorsByClass(cls)
-      elseif Game.GetAllActorsOfClass then
-        list = Game:GetAllActorsOfClass(cls)
+
+    -- Different match builds can expose pickups through either class.
+    -- Query BOTH classes instead of stopping at the first imported class.
+    local pickupClasses = {}
+    local seenClasses = {}
+    local classNames = { "PickUpWrapperActor", "STPickupWrapperActor" }
+    for _, className in ipairs(classNames) do
+      local cls = nil
+      pcall(function() cls = import(className) end)
+      if cls and not seenClasses[cls] then
+        seenClasses[cls] = true
+        pickupClasses[#pickupClasses + 1] = cls
       end
-    end)
-    if not list then return end
-    local n = type(list.Num) == "function" and list:Num() or #list
-    for i = 0, n - 1 do
-      local item = type(list.Get) == "function" and list:Get(i) or list[i]
-      if Around(item) then
-        local dist = 0
-        pcall(function()
-          if type(player.GetDistanceTo) == "function" then dist = player:GetDistanceTo(item) end
-        end)
-        if dist <= 30000 then
-          local itemId = nil
-          pcall(function()
-            if item.DefineID then itemId = item.DefineID.TypeSpecificID or item.DefineID end
-          end)
-          if not itemId and item.DefineId then itemId = item.DefineId end
-          if WpnDb[itemId] then
-            A.Up.NearbyWeapons[#A.Up.NearbyWeapons + 1] = { actor = item, id = itemId }
-          end
+    end
+
+    if #pickupClasses == 0 then return end
+
+    local seenActors = {}
+    local function AddPickup(item)
+      if not Around(item) or seenActors[item] then return end
+      seenActors[item] = true
+
+      local dist = 0
+      pcall(function()
+        if type(player.GetDistanceTo) == "function" then
+          dist = player:GetDistanceTo(item)
         end
+      end)
+      if dist > 30000 then return end
+
+      local itemId = nil
+      pcall(function()
+        if item.DefineID then
+          itemId = item.DefineID.TypeSpecificID or item.DefineID
+        end
+      end)
+      if not itemId then
+        pcall(function()
+          if item.DefineId then
+            itemId = item.DefineId.TypeSpecificID or item.DefineId
+          end
+        end)
+      end
+
+      if itemId and WpnDb[itemId] then
+        A.Up.NearbyWeapons[#A.Up.NearbyWeapons + 1] = {
+          actor = item,
+          id = itemId
+        }
+      end
+    end
+
+    for _, cls in ipairs(pickupClasses) do
+      local list = nil
+      pcall(function()
+        if Game.GetActorsByClass then
+          list = Game:GetActorsByClass(cls)
+        elseif Game.GetAllActorsOfClass then
+          list = Game:GetAllActorsOfClass(cls)
+        end
+      end)
+
+      if list then
+        pcall(function()
+          if type(list.Num) == "function" and type(list.Get) == "function" then
+            local n = list:Num()
+            for i = 0, n - 1 do
+              AddPickup(list:Get(i))
+            end
+          else
+            for _, item in ipairs(list) do
+              AddPickup(item)
+            end
+          end
+        end)
       end
     end
   end)
