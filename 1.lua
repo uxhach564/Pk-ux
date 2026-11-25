@@ -3737,6 +3737,7 @@ end)()
         if d.Event and d.Handle~=nil then pcall(function() d.Event:Remove(d.Handle) end) end
         if d.GetKeyEvent and d.GetKeyHandle~=nil then pcall(function() d.GetKeyEvent:Remove(d.GetKeyHandle) end) end
         if d.EyeEvent and d.EyeHandle~=nil then pcall(function() d.EyeEvent:Remove(d.EyeHandle) end) end
+        if d.PasteEvent and d.PasteHandle~=nil then pcall(function() d.PasteEvent:Remove(d.PasteHandle) end) end
         if valid(d.Container) then pcall(function() d.Container:RemoveFromParent() end) end
         d.Submit=nil;d.Event=nil;d.Handle=nil;d.GetKeyEvent=nil;d.GetKeyHandle=nil;d.Container=nil;d.Parent=nil
         d.Input=nil;d.Button=nil;d.GetKeyButton=nil;d.EyeButton=nil;d.PasteButton=nil;d.EyeLabel=nil;d.EyeEvent=nil;d.EyeHandle=nil;d.PasteEvent=nil;d.PasteHandle=nil;d.Status=nil;d.Title=nil;d.Detail=nil;d.Hint=nil;d.Design=nil;d.Cache=nil
@@ -4049,37 +4050,58 @@ end)()
                     add(button,x,by,bw,bh,9,true)
                     return button
                 end
-                -- Read clipboard text through whichever clipboard binding this SLua build exposes.
-                -- ClipboardPaste is the standard Unreal KismetSystemLibrary entry point;
-                -- the other names are guarded compatibility fallbacks.
+                -- Read the Android/Unreal clipboard using the exact imported Kismet class
+                -- first. Some SLua builds return FString userdata instead of a Lua string,
+                -- and some expose static methods with/without an explicit class receiver.
                 local function readLoginClipboard()
                     local candidates={}
                     local function addCandidate(owner,name)
                         local fn=member(owner,name)
-                        if type(fn)=="function" then candidates[#candidates+1]={owner=owner,fn=fn} end
+                        if type(fn)=="function" then candidates[#candidates+1]={owner=owner,fn=fn,name=name} end
                     end
-                    for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard","getClipboardText","getText"}) do
-                        addCandidate(_G,name)
-                    end
+                    -- This class is imported by the main script and is the preferred binding.
+                    addCandidate(UKismetSystemLibrary,"ClipboardPaste")
+                    addCandidate(UKismetSystemLibrary,"GetClipboardText")
+                    addCandidate(_G,"ClipboardPaste")
+                    addCandidate(_G,"GetClipboardText")
                     local okImport,lib=pcall(import,"KismetSystemLibrary")
                     if okImport and lib then
-                        for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard"}) do addCandidate(lib,name) end
+                        addCandidate(lib,"ClipboardPaste")
+                        addCandidate(lib,"GetClipboardText")
                     end
                     local ue=rawget(_G,"UE4")
                     local sys=ue and (member(ue,"UKismetSystemLibrary") or member(ue,"KismetSystemLibrary"))
                     if sys then
-                        for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard"}) do addCandidate(sys,name) end
+                        addCandidate(sys,"ClipboardPaste")
+                        addCandidate(sys,"GetClipboardText")
                     end
                     local clip=rawget(_G,"clipboard") or rawget(_G,"Clipboard")
                     if clip then
                         for _,name in ipairs({"paste","getText","get_text","readText"}) do addCandidate(clip,name) end
                     end
+                    local function asClipboardString(value)
+                        if type(value)=="string" then return value end
+                        if value==nil or type(value)=="boolean" or type(value)=="number" then return nil end
+                        -- SLua may wrap an FString return value as userdata/table.
+                        local okText,textValue=pcall(function() return tostring(value) end)
+                        if not okText or type(textValue)~="string" then return nil end
+                        if textValue=="" or textValue=="nil" or textValue:match("^%w+:%s*0x[%da-fA-F]+$") then return nil end
+                        return textValue
+                    end
                     for _,entry in ipairs(candidates) do
-                        local ok,value=pcall(entry.fn)
-                        if not ok and entry.owner~=nil then ok,value=pcall(entry.fn,entry.owner) end
-                        if ok and type(value)=="string" and #value>0 and #value<=512 then
-                            value=value:gsub("%z",""):match("^%s*(.-)%s*$")
-                            if value and value~="" then return value end
+                        local attempts={function() return entry.fn() end}
+                        if entry.owner~=nil then attempts[#attempts+1]=function() return entry.fn(entry.owner) end end
+                        for _,attempt in ipairs(attempts) do
+                            local ok,value=pcall(attempt)
+                            if ok then
+                                local textValue=asClipboardString(value)
+                                if textValue then
+                                    textValue=textValue:gsub("%z",""):gsub("[\r\n]+$","")
+                                    -- Preserve internal characters; only discard surrounding whitespace.
+                                    textValue=textValue:match("^%s*(.-)%s*$")
+                                    if textValue and textValue~="" and #textValue<=512 then return textValue end
+                                end
+                            end
                         end
                     end
                     return nil
@@ -4102,7 +4124,7 @@ end)()
                     if not d.Visible or d.Busy then return end
                     local pasted=readLoginClipboard()
                     if not pasted then
-                        if d.Status then d.Status:SetText("Clipboard is unavailable. Copy the key and try again.") end
+                        if d.Status then d.Status:SetText("Clipboard API is not exposed by this game build. Use the key field Paste command if available.") end
                         return
                     end
                     d.SecretKey=pasted
