@@ -1566,7 +1566,8 @@ function Weapons.Scan(pc)
       pcall(function()
         if Game.GetActorsByClass then
           list = Game:GetActorsByClass(cls)
-        elseif Game.GetAllActorsOfClass then
+        end
+        if not list and Game.GetAllActorsOfClass then
           list = Game:GetAllActorsOfClass(cls)
         end
       end)
@@ -1632,11 +1633,14 @@ function SupplyItems.Scan(pc)
     if not Around(player) then return end
     local boxClass = import("PlayerTombBox")
     if not boxClass then return end
-    local list = Game:GetActorsByClass(boxClass)
+    local list = nil
+    if Game.GetActorsByClass then list = Game:GetActorsByClass(boxClass) end
+    if not list and Game.GetAllActorsOfClass then list = Game:GetAllActorsOfClass(boxClass) end
     if not list then return end
+    local hasGet = type(list.Get) == "function"
     local count = type(list.Num) == "function" and list:Num() or #list
     for i = 0, count - 1 do
-      local box = type(list.Get) == "function" and list:Get(i) or list[i]
+      local box = hasGet and list:Get(i) or list[i + 1]
       if Around(box) then
         local boxType = 0
         pcall(function() boxType = box.BoxType or 0 end)
@@ -1697,15 +1701,29 @@ end
 local GrenadeTracker = {}
 
 local function GrenadeActorName(actor)
-  local name = nil
+  local names = {}
   pcall(function()
     if type(actor.GetName) == "function" then
-      name = actor:GetName()
+      names[#names + 1] = tostring(actor:GetName() or "")
     else
-      name = tostring(actor)
+      names[#names + 1] = tostring(actor)
     end
   end)
-  return string.lower(tostring(name or ""))
+  -- Instance names are not consistent across maps/builds; include the class
+  -- name too, which usually carries the grenade/pickup/projectile identifier.
+  pcall(function()
+    if type(actor.GetClass) == "function" then
+      local cls = actor:GetClass()
+      if cls then
+        if type(cls.GetName) == "function" then
+          names[#names + 1] = tostring(cls:GetName() or "")
+        else
+          names[#names + 1] = tostring(cls)
+        end
+      end
+    end
+  end)
+  return string.lower(table.concat(names, " "))
 end
 
 local function ClassifyGrenadeActor(actor)
@@ -1773,7 +1791,8 @@ function GrenadeTracker.Scan(pc)
     local actors = nil
     if type(Game.GetActorsByClass) == "function" then
       actors = Game:GetActorsByClass(actorClass)
-    elseif type(Game.GetAllActorsOfClass) == "function" then
+    end
+    if not actors and type(Game.GetAllActorsOfClass) == "function" then
       actors = Game:GetAllActorsOfClass(actorClass)
     end
     if not actors then return end
@@ -2587,7 +2606,12 @@ end
 local Menu = {}
 
 function Menu.Wire()
-  if A.Up.MenuWired then return end
+  -- UIManager can be recreated by the game between matches.  Do not treat
+  -- MenuWired as proof that the CURRENT manager still has our ShowUI hook.
+  local currentManager = _G.UIManager
+  if A.Up.MenuWired and currentManager and currentManager._AegisUiHooked then
+    return
+  end
   local loc = _G.LocUtil
   if not loc then
     local ok, m = pcall(require, "client.common.LocUtil")
@@ -2884,12 +2908,14 @@ function Menu.Wire()
 end
 
 function Menu.Announce()
+  -- Re-check the hook on every heartbeat: the game may replace UIManager
+  -- when returning to the lobby or entering another match.
+  pcall(Menu.Wire)
   if A.Up.Announced then return end
-  pcall(function()
-    Menu.Wire()
+  local ok = pcall(function()
     OnScreen("Mod Menu Added!\nOpen Settings (Gear icon) -> UX_Official  MENU.")
-    A.Up.Announced = true
   end)
+  if ok then A.Up.Announced = true end
 end
 
 local MOKING = {}
@@ -2961,6 +2987,8 @@ local function ResetMatchRuntimeState()
   A.Up.SupplyScanAt = nil
   A.Up.GrenadeScanAt = nil
   A.Up.GrenadeActorClass = nil
+  A.Up.GrenadeGameplayStatics = nil
+  A.Up.GrenadeTimers = setmetatable({}, { __mode = "k" })
   A.Up.GrenadeKnown = setmetatable({}, { __mode = "k" })
   A.Up.GrenadeRejected = setmetatable({}, { __mode = "k" })
 
@@ -2972,6 +3000,17 @@ local function ResetMatchRuntimeState()
   A.Up.MatchModeKey = nil
   MOKING._matchEntered = false
   MOKING._popupShown = false
+end
+
+-- Loading screens and seamless travel can temporarily return no controller.
+-- A one-frame gap must not erase match state (or repeatedly reset entry flags).
+local function HandleMatchUnavailable()
+  local now = os.clock()
+  A.Up.MatchLostSince = A.Up.MatchLostSince or now
+  if not A.Up.MatchRuntimeCleared and (now - A.Up.MatchLostSince) >= 2.0 then
+    ResetMatchRuntimeState()
+    A.Up.MatchRuntimeCleared = true
+  end
 end
 
 local function GetRuntimeModeKey()
@@ -2997,7 +3036,7 @@ local function Beat()
 
   local okData, GameplayData = pcall(require, "GameLua.GameCore.Data.GameplayData")
   if not okData or type(GameplayData) ~= "table" then
-    ResetMatchRuntimeState()
+    HandleMatchUnavailable()
     return
   end
 
@@ -3017,9 +3056,14 @@ local function Beat()
   end
 
   if not Around(pc) or not Around(me) then
-    ResetMatchRuntimeState()
+    HandleMatchUnavailable()
     return
   end
+
+  -- A valid controller/player has returned. If the previous gap lasted long
+  -- enough, its match-scoped caches were already cleared by the grace handler.
+  A.Up.MatchLostSince = nil
+  A.Up.MatchRuntimeCleared = false
 
   local currentModeKey = GetRuntimeModeKey()
   local matchChanged =
