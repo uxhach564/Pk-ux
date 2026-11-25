@@ -3739,7 +3739,7 @@ end)()
         if d.EyeEvent and d.EyeHandle~=nil then pcall(function() d.EyeEvent:Remove(d.EyeHandle) end) end
         if valid(d.Container) then pcall(function() d.Container:RemoveFromParent() end) end
         d.Submit=nil;d.Event=nil;d.Handle=nil;d.GetKeyEvent=nil;d.GetKeyHandle=nil;d.Container=nil;d.Parent=nil
-        d.Input=nil;d.Button=nil;d.GetKeyButton=nil;d.EyeButton=nil;d.EyeLabel=nil;d.EyeEvent=nil;d.EyeHandle=nil;d.Status=nil;d.Title=nil;d.Detail=nil;d.Hint=nil;d.Design=nil;d.Cache=nil
+        d.Input=nil;d.Button=nil;d.GetKeyButton=nil;d.EyeButton=nil;d.PasteButton=nil;d.EyeLabel=nil;d.EyeEvent=nil;d.EyeHandle=nil;d.PasteEvent=nil;d.PasteHandle=nil;d.Status=nil;d.Title=nil;d.Detail=nil;d.Hint=nil;d.Design=nil;d.Cache=nil
     end
     -- Approved red/green frame, dark red/green heading, light full-color body.
     -- All gradient/angle/brush work happens at construction. No animation,
@@ -4012,7 +4012,8 @@ end)()
                 d.UsingMaskFallback=true
                 pcall(function() d.Input:SetText(string.rep("*",#d.SecretKey)) end)
                 pcall(function() d.Input:SetIsReadOnly(true) end)
-                visibility(d.Input,enums.Visible);add(d.Input,23,107,W-100,35,8,true)
+                -- Leave room at the right edge for the native paste and eye controls.
+                visibility(d.Input,enums.Visible);add(d.Input,23,107,W-150,35,8,true)
                 d.Hint=text("Your key is saved automatically",22,149,W-44,19,11,burgundy,7,false,false)
                 d.Status=text(status or "Enter your key",22,170,W-44,23,11,burgundy,8,false,false,true)
             end
@@ -4048,6 +4049,70 @@ end)()
                     add(button,x,by,bw,bh,9,true)
                     return button
                 end
+                -- Read clipboard text through whichever clipboard binding this SLua build exposes.
+                -- ClipboardPaste is the standard Unreal KismetSystemLibrary entry point;
+                -- the other names are guarded compatibility fallbacks.
+                local function readLoginClipboard()
+                    local candidates={}
+                    local function addCandidate(owner,name)
+                        local fn=member(owner,name)
+                        if type(fn)=="function" then candidates[#candidates+1]={owner=owner,fn=fn} end
+                    end
+                    for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard","getClipboardText","getText"}) do
+                        addCandidate(_G,name)
+                    end
+                    local okImport,lib=pcall(import,"KismetSystemLibrary")
+                    if okImport and lib then
+                        for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard"}) do addCandidate(lib,name) end
+                    end
+                    local ue=rawget(_G,"UE4")
+                    local sys=ue and (member(ue,"UKismetSystemLibrary") or member(ue,"KismetSystemLibrary"))
+                    if sys then
+                        for _,name in ipairs({"ClipboardPaste","GetClipboardText","GetClipboard"}) do addCandidate(sys,name) end
+                    end
+                    local clip=rawget(_G,"clipboard") or rawget(_G,"Clipboard")
+                    if clip then
+                        for _,name in ipairs({"paste","getText","get_text","readText"}) do addCandidate(clip,name) end
+                    end
+                    for _,entry in ipairs(candidates) do
+                        local ok,value=pcall(entry.fn)
+                        if not ok and entry.owner~=nil then ok,value=pcall(entry.fn,entry.owner) end
+                        if ok and type(value)=="string" and #value>0 and #value<=512 then
+                            value=value:gsub("%z",""):match("^%s*(.-)%s*$")
+                            if value and value~="" then return value end
+                        end
+                    end
+                    return nil
+                end
+                -- Paper/slip paste button sits between the key field and the eye button.
+                d.PasteButton=make("Button",d.Container)
+                panel(W-116,108,39,34,7,{{5,40,92},{10,93,192},{4,46,108}},5,12)
+                pcall(function() d.PasteButton:SetBackgroundColor(color(255,255,255,0)) end)
+                visibility(d.PasteButton,enums.Visible)
+                add(d.PasteButton,W-116,108,39,34,10,true)
+                -- Draw a small paper slip glyph from native rectangles/lines (no font dependency).
+                local paperX,paperY=W-103,116
+                local paper=color(220,240,255)
+                rect(paperX,paperY,14,18,paper,12,1)
+                rect(paperX+2,paperY+3,10,1,color(5,40,92),13,1)
+                rect(paperX+2,paperY+7,10,1,color(5,40,92),13,1)
+                rect(paperX+2,paperY+11,7,1,color(5,40,92),13,1)
+                d.PasteEvent=d.PasteButton.OnClicked
+                d.PasteHandle=d.PasteEvent:Add(function()
+                    if not d.Visible or d.Busy then return end
+                    local pasted=readLoginClipboard()
+                    if not pasted then
+                        if d.Status then d.Status:SetText("Clipboard is unavailable. Copy the key and try again.") end
+                        return
+                    end
+                    d.SecretKey=pasted
+                    if d.KeyVisible then
+                        pcall(function() d.Input:SetText(pasted) end)
+                    else
+                        pcall(function() d.Input:SetText(string.rep("*",#pasted)) end)
+                    end
+                    if d.Status then d.Status:SetText("Key pasted. Press OK to log in.") end
+                end)
                 -- Compact eye button at the right end of the key field.
                 d.EyeButton=make("Button",d.Container)
                 panel(W-70,108,43,34,7,{{5,40,92},{10,93,192},{4,46,108}},5,12)
